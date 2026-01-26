@@ -1,91 +1,94 @@
-# ==================================================
-# PATCH INSTALLER SEB v3.10.0.826
-# Safe • Silent • Stable
-# ==================================================
-
-# ===== SAFE UTF-8 MODE =====
-try {
-    [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-} catch {}
-
 Clear-Host
 
-# ===== DETECT UNICODE SUPPORT =====
-$UnicodeOK = $true
-try {
-    Write-Host "█" -NoNewline
-    Clear-Host
-} catch {
-    $UnicodeOK = $false
+# ===== SAFE UTF-8 MODE =====
+try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch {}
+
+# ===== COLOR RESET =====
+$Reset = "`e[0m"
+
+# ===== PURPLE GRADIENT =====
+$PurpleGradient = @(
+    "`e[38;2;255;0;255m",
+    "`e[38;2;230;0;255m",
+    "`e[38;2;200;0;255m",
+    "`e[38;2;170;0;255m",
+    "`e[38;2;140;0;255m",
+    "`e[38;2;110;0;255m"
+)
+
+# ===== NEON BLUE =====
+$NeonBlue = "`e[38;2;0;200;255m"
+
+# ===== TYPING EFFECT =====
+function Type-Line {
+    param (
+        [string]$Text,
+        [int]$Delay = 4
+    )
+    foreach ($char in $Text.ToCharArray()) {
+        Write-Host -NoNewline $char
+        Start-Sleep -Milliseconds $Delay
+    }
+    Write-Host ""
 }
 
 # ===== ASCII LOGO =====
-$AsciiUnicode = @(
-"███╗   ███╗ ██╗  ██╗ ██████╗  █████╗ ██████╗ ██╗   ██╗ ███╗   ██╗ ███╗   ██╗",
-"████╗ ████║ ██║  ██║ ██╔══██╗██╔══██╗██╔══██╗██║   ██║ ████╗  ██║ ████╗  ██║",
-"██╔████╔██║ ███████║ ██║  ██║███████║██████╔╝██║   ██║ ██╔██╗ ██║ ██╔██╗ ██║",
-"██║╚██╔╝██║ ██╔══██║ ██║  ██║██╔══██║██╔══██╗╚██╗ ██╔╝ ██║╚██╗██║ ██║╚██╗██║",
-"██║ ╚═╝ ██║ ██║  ██║ ██████╔╝██║  ██║██║  ██║ ╚████╔╝  ██║ ╚████║ ██║ ╚████║",
-"╚═╝     ╚═╝ ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝  ╚═══╝   ╚═╝  ╚═══╝ ╚═╝  ╚═══╝"
+$Ascii = @(
+" $$$$$$\  $$$$$$$\  $$\    $$\ $$$$$$\ $$\   $$\                      ",
+"$$  __$$\ $$  __$$\ $$ |   $$ |\_$$  _|$$$\  $$ |                     ",
+"$$ /  $$ |$$ |  $$ |$$ |   $$ |  $$ |  $$$$\ $$ |                     ",
+"$$$$$$$$ |$$$$$$$  |\$$\  $$  |  $$ |  $$ $$\$$ |                     ",
+"$$  __$$ |$$  __$$<  \$$\$$  /   $$ |  $$ \$$$$ |                     ",
+"$$ |  $$ |$$ |  $$ |  \$$$  /    $$ |  $$ |\$$$ |                     ",
+"$$ |  $$ |$$ |  $$ |   \$  /   $$$$$$\ $$ | \$$ |                     ",
+"\__|  \__|\__|  \__|    \_/    \______|\__|  \__|                     ",
+"                                                                     ",
+"                                                                     ",
+"                                                                     ",
+"$$$$$$$\  $$$$$$$\   $$$$$$\  $$$$$$$\   $$$$$$\  $$\   $$\  $$$$$$\ ",
+"$$  __$$\ $$  __$$\ $$  __$$\ $$  __$$\ $$  __$$\ $$$\  $$ |$$  __$$\",
+"$$ |  $$ |$$ |  $$ |$$ /  $$ |$$ |  $$ |$$ /  $$ |$$$$\ $$ |$$ /  $$ |",
+"$$$$$$$  |$$$$$$$  |$$$$$$$$ |$$ |  $$ |$$$$$$$$ |$$ $$\$$ |$$$$$$$$ |",
+"$$  ____/ $$  __$$< $$  __$$ |$$ |  $$ |$$  __$$ |$$ \$$$$ |$$  __$$ |",
+"$$ |      $$ |  $$ |$$ |  $$ |$$ |  $$ |$$ |  $$ |$$ |\$$$ |$$ |  $$ |",
+"$$ |      $$ |  $$ |$$ |  $$ |$$$$$$$  |$$ |  $$ |$$ | \$$ |$$ |  $$ |",
+"\__|      \__|  \__|\__|  \__|\_______/ \__|  \__|\__|  \__|\__|  \__|",
+"                                                                     ",
+"                                                                     ",
+"                                                                     "
 )
 
-$AsciiSafe = @(
-"###    ###  ##   ##  ######   #####  ######  ##    ##  ###    ##  ###    ##",
-"####  ####  ##   ##  ##   ## ##   ## ##   ## ##    ## ####   ## ####   ##",
-"## #### ##  #######  ##   ## ####### ######  ##    ## ## ##  ## ## ##  ##",
-"##  ##  ##  ##   ##  ##   ## ##   ## ##   ##  ##  ##  ##  ## ## ##  ## ##",
-"##      ##  ##   ##  ######  ##   ## ##   ##   ####   ##   #### ##   ####"
-)
-
-$Logo = if ($UnicodeOK) { $AsciiUnicode } else { $AsciiSafe }
-
-# ===== ASCII ANIMATION (MAGENTA) =====
-foreach ($line in $Logo) {
-    Write-Host $line -ForegroundColor Magenta
-    Start-Sleep -Milliseconds 60
+# ===== PRINT ASCII (FAST) =====
+for ($i = 0; $i -lt $Ascii.Count; $i++) {
+    Type-Line "$($PurpleGradient[$i % $PurpleGradient.Count])$($Ascii[$i])$Reset" 0
 }
-
 Write-Host ""
 
-# ===== TITLE (NEON BLUE) =====
-Write-Host "=====================================" -ForegroundColor Cyan
-Write-Host "   PATCH INSTALLER SEB v3.10.0.826   " -ForegroundColor Cyan
-Write-Host "        Powered by ArvinPrdn        " -ForegroundColor Cyan
-Write-Host "=====================================" -ForegroundColor Cyan
+# ===== TITLE (SLOW TYPING) =====
+Type-Line "$NeonBlue=====================================$Reset" 8
+Type-Line "$NeonBlue   PATCH INSTALLER SEB v3.10.0.826   $Reset" 10
+Type-Line "$NeonBlue        Powered by ArvinPrdn        $Reset" 10
+Type-Line "$NeonBlue=====================================$Reset" 8
 Write-Host ""
 
-# ===== DOWNLOAD CONFIG =====
+# ===== INSTALLER LOGIC =====
 $Url = "https://github.com/ArvinPrdn/PATCH-INSTALLER-SEB-v3.10.0.826/releases/download/v3.10.0.826/patch-seb.1.exe"
 $Out = "$env:TEMP\patch-seb.exe"
 
-Write-Host "📥 Downloading Patch SEB..." -ForegroundColor Yellow
+Type-Line "📥 Downloading Patch SEB..." 12
+Invoke-WebRequest -Uri $Url -OutFile $Out -UseBasicParsing -MaximumRedirection 10
 
-try {
-    Invoke-WebRequest -Uri $Url -OutFile $Out -UseBasicParsing -MaximumRedirection 10
-} catch {
-    Write-Host "❌ Download gagal. Cek koneksi / URL." -ForegroundColor Red
-    exit 1
-}
-
-if (!(Test-Path $Out)) {
-    Write-Host "❌ File installer tidak ditemukan." -ForegroundColor Red
-    exit 1
-}
-
-# ===== FAKE PROGRESS =====
-for ($i = 0; $i -le 100; $i += 5) {
+# ===== PROGRESS BAR =====
+for ($i = 1; $i -le 100; $i += 5) {
     Write-Progress -Activity "Preparing Installer" -Status "$i% Complete" -PercentComplete $i
     Start-Sleep -Milliseconds 70
 }
-Write-Progress -Activity "Preparing Installer" -Completed
+Write-Progress -Completed
 
-# ===== RUN SILENT INSTALL =====
-Write-Host "⚙️ Menjalankan installer (silent)..." -ForegroundColor Yellow
-
+# ===== SILENT INSTALL =====
+Type-Line "⚙️ Installing silently..." 12
 Unblock-File $Out
-Start-Process -FilePath $Out -ArgumentList "/S" -Wait
+Start-Process $Out -ArgumentList "/S" -Wait
 
-# ===== DONE =====
 Write-Host ""
 Write-Host "✅ INSTALL SELESAI" -ForegroundColor Green
-Write-Host "Silakan restart jika diperlukan."
