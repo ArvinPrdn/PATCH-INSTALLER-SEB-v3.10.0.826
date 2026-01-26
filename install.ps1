@@ -20,19 +20,28 @@ $Logo = @(
 "|_|                                    "
 )
 
-# Warna ungu untuk cyberpunk vibe
+# Hitung jumlah karakter total di ASCII art
+$TotalChars = ($Logo | ForEach-Object { $_.Length }) | Measure-Object -Sum | Select-Object -ExpandProperty Sum
+
+# Durasi total animasi: 5 detik (5000 ms)
+$TotalDuration = 5000
+
+# Delay per karakter
+$DelayPerChar = $TotalDuration / $TotalChars
+
+# Warna ungu
 $Color = "Magenta"
 
-# Fungsi animasi ketik super cepat
+# Fungsi animasi ketik dengan durasi total 5 detik
 function Write-CyberText($text) {
     foreach ($char in $text.ToCharArray()) {
         Write-Host -NoNewline $char -ForegroundColor $Color
-        Start-Sleep -Milliseconds 5  # animasi sangat cepat
+        Start-Sleep -Milliseconds $DelayPerChar
     }
     Write-Host ""
 }
 
-# Menampilkan logo dengan animasi cepat
+# Tampilkan logo
 foreach ($line in $Logo) {
     Write-CyberText $line
 }
