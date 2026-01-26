@@ -1,110 +1,84 @@
 Clear-Host
 
-# ===== SAFE UTF-8 MODE =====
-try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch {}
-
-# ===== RESET =====
-$Reset = "`e[0m"
-
-# ===== COLORS =====
-$PurpleGradient = @(
-    "`e[38;2;255;0;255m",
-    "`e[38;2;230;0;255m",
-    "`e[38;2;200;0;255m",
-    "`e[38;2;170;0;255m",
-    "`e[38;2;140;0;255m",
-    "`e[38;2;110;0;255m"
+# ===== ASCII LOGO =====
+$Logo = @(
+"  ___   ______   _   _   _____   _   _ ",
+" / _ \  | ___ \ | | | | |_   _| | \ | |",
+"/ /_\ \ | |_/ / | | | |   | |   |  \| |",
+"|  _  | |    /  | | | |   | |   | . ` |",
+"| | | | | |\ \  \ \_/ /  _| |_  | |\  |",
+"\_| |_/ \_| \_|  \___/   \___/  \_| \_/",
+"                                       ",
+"                                       ",
+"               _       _ _ _           ",
+"              | |     | | | |          ",
+" _ __  _ __ __| |_ __ | | | |          ",
+"| '_ \| '__/ _` | '_ \| | | |          ",
+"| |_) | | | (_| | | | |_|_|_|          ",
+"| .__/|_|  \__,_|_| |_(_|_|_)          ",
+"| |                                    ",
+"|_|                                    "
 )
-$NeonBlue = "`e[38;2;0;200;255m"
 
-# ===== TYPING EFFECT (TEXT ONLY) =====
-function Type-Line {
-    param ([string]$Text, [int]$Delay = 10)
-    foreach ($c in $Text.ToCharArray()) {
-        Write-Host -NoNewline $c
-        Start-Sleep -Milliseconds $Delay
+# Warna neon untuk vibe cyberpunk
+$Colors = @("Cyan", "Magenta", "Yellow", "Green", "Blue")
+
+# Fungsi untuk animasi ketik per karakter
+function Write-CyberText($text) {
+    foreach ($char in $text.ToCharArray()) {
+        $color = $Colors | Get-Random
+        Write-Host -NoNewline $char -ForegroundColor $color
+        Start-Sleep -Milliseconds (20 + (Get-Random -Minimum 0 -Maximum 40))
     }
     Write-Host ""
 }
 
-# ===== ASCII LOGO (SAFE & NARROW) =====
-$Ascii = @'
-                                                                                               
-                                                                                                                           
-               AAA               RRRRRRRRRRRRRRRRR   VVVVVVVV           VVVVVVVV     IIIIIIIIII     NNNNNNNN        NNNNNNNN
-              A:::A              R::::::::::::::::R  V::::::V           V::::::V     I::::::::I     N:::::::N       N::::::N
-             A:::::A             R::::::RRRRRR:::::R V::::::V           V::::::V     I::::::::I     N::::::::N      N::::::N
-            A:::::::A            RR:::::R     R:::::RV::::::V           V::::::V     II::::::II     N:::::::::N     N::::::N
-           A:::::::::A             R::::R     R:::::R V:::::V           V:::::V        I::::I       N::::::::::N    N::::::N
-          A:::::A:::::A            R::::R     R:::::R  V:::::V         V:::::V         I::::I       N:::::::::::N   N::::::N
-         A:::::A A:::::A           R::::RRRRRR:::::R    V:::::V       V:::::V          I::::I       N:::::::N::::N  N::::::N
-        A:::::A   A:::::A          R:::::::::::::RR      V:::::V     V:::::V           I::::I       N::::::N N::::N N::::::N
-       A:::::A     A:::::A         R::::RRRRRR:::::R      V:::::V   V:::::V            I::::I       N::::::N  N::::N:::::::N
-      A:::::AAAAAAAAA:::::A        R::::R     R:::::R      V:::::V V:::::V             I::::I       N::::::N   N:::::::::::N
-     A:::::::::::::::::::::A       R::::R     R:::::R       V:::::V:::::V              I::::I       N::::::N    N::::::::::N
-    A:::::AAAAAAAAAAAAA:::::A      R::::R     R:::::R        V:::::::::V               I::::I       N::::::N     N:::::::::N
-   A:::::A             A:::::A   RR:::::R     R:::::R         V:::::::V              II::::::II     N::::::N      N::::::::N
-  A:::::A               A:::::A  R::::::R     R:::::R          V:::::V               I::::::::I     N::::::N       N:::::::N
- A:::::A                 A:::::A R::::::R     R:::::R           V:::V                I::::::::I     N::::::N        N::::::N
-AAAAAAA                   AAAAAAARRRRRRRR     RRRRRRR            VVV                 IIIIIIIIII     NNNNNNNN         NNNNNNN
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
-                                                    dddddddd                                                                
-                                                    d::::::d                  !!!  !!!  !!!                                 
-                                                    d::::::d                 !!:!!!!:!!!!:!!                                
-                                                    d::::::d                 !:::!!:::!!:::!                                
-                                                    d:::::d                  !:::!!:::!!:::!                                
-ppppp   ppppppppp   rrrrr   rrrrrrrrr       ddddddddd:::::dnnnn  nnnnnnnn    !:::!!:::!!:::!                                
-p::::ppp:::::::::p  r::::rrr:::::::::r    dd::::::::::::::dn:::nn::::::::nn  !:::!!:::!!:::!                                
-p:::::::::::::::::p r:::::::::::::::::r  d::::::::::::::::dn::::::::::::::nn !:::!!:::!!:::!                                
-pp::::::ppppp::::::prr::::::rrrrr::::::rd:::::::ddddd:::::dnn:::::::::::::::n!:::!!:::!!:::!                                
- p:::::p     p:::::p r:::::r     r:::::rd::::::d    d:::::d  n:::::nnnn:::::n!:::!!:::!!:::!                                
- p:::::p     p:::::p r:::::r     rrrrrrrd:::::d     d:::::d  n::::n    n::::n!:::!!:::!!:::!                                
- p:::::p     p:::::p r:::::r            d:::::d     d:::::d  n::::n    n::::n!!:!!!!:!!!!:!!                                
- p:::::p    p::::::p r:::::r            d:::::d     d:::::d  n::::n    n::::n !!!  !!!  !!!                                 
- p:::::ppppp:::::::p r:::::r            d::::::ddddd::::::dd n::::n    n::::n                                               
- p::::::::::::::::p  r:::::r             d:::::::::::::::::d n::::n    n::::n !!!  !!!  !!!                                 
- p::::::::::::::pp   r:::::r              d:::::::::ddd::::d n::::n    n::::n!!:!!!!:!!!!:!!                                
- p::::::pppppppp     rrrrrrr               ddddddddd   ddddd nnnnnn    nnnnnn !!!  !!!  !!!                                 
- p:::::p                                                                                                                    
- p:::::p                                                                                                                    
-p:::::::p                                                                                                                   
-p:::::::p                                                                                                                   
-p:::::::p                                                                                                                   
-ppppppppp                                                                                                                   
-'@ -split "`n"
-
-# ===== PRINT ASCII (NO TYPING, SAFE) =====
-for ($i = 0; $i -lt $Ascii.Count; $i++) {
-    Write-Host "$($PurpleGradient[$i % $PurpleGradient.Count])$($Ascii[$i])$Reset"
+# Menampilkan logo dengan animasi
+foreach ($line in $Logo) {
+    Write-CyberText $line
 }
+
 Write-Host ""
 
-# ===== TITLE (SLOW TYPING) =====
-Type-Line "$NeonBlue=====================================$Reset" 8
-Type-Line "$NeonBlue   PATCH INSTALLER SEB v3.10.0.826   $Reset" 10
-Type-Line "$NeonBlue        Powered by ArvinPrdn        $Reset" 10
-Type-Line "$NeonBlue=====================================$Reset" 8
+# ===== TITLE =====
+Write-CyberText "====================================="
+Write-CyberText "   PATCH INSTALLER SEB v3.10.0.826   "
+Write-CyberText "        Powered by ArvinPrdn        "
+Write-CyberText "====================================="
 Write-Host ""
 
-# ===== INSTALLER =====
+# ===== DOWNLOAD CONFIG =====
 $Url = "https://github.com/ArvinPrdn/PATCH-INSTALLER-SEB-v3.10.0.826/releases/download/v3.10.0.826/patch-seb.1.exe"
 $Out = "$env:TEMP\patch-seb.exe"
 
-Type-Line "📥 Downloading Patch SEB..." 12
-Invoke-WebRequest -Uri $Url -OutFile $Out -UseBasicParsing -MaximumRedirection 10
+Write-CyberText "📥 Downloading Patch SEB..."
 
-# ===== PROGRESS =====
-for ($i = 1; $i -le 100; $i += 5) {
+try {
+    Invoke-WebRequest -Uri $Url -OutFile $Out -UseBasicParsing
+} catch {
+    Write-CyberText "❌ Download gagal. Cek koneksi / URL."
+    exit 1
+}
+
+if (!(Test-Path $Out)) {
+    Write-CyberText "❌ File installer tidak ditemukan."
+    exit 1
+}
+
+# ===== FAKE PROGRESS =====
+for ($i = 0; $i -le 100; $i += 5) {
     Write-Progress -Activity "Preparing Installer" -Status "$i% Complete" -PercentComplete $i
     Start-Sleep -Milliseconds 70
 }
-Write-Progress -Completed
+Write-Progress -Activity "Preparing Installer" -Completed
 
-# ===== SILENT INSTALL =====
-Type-Line "⚙️ Installing silently..." 12
+# ===== RUN SILENT INSTALL =====
+Write-CyberText "⚙️ Menjalankan installer (silent)..."
+
 Unblock-File $Out
-Start-Process $Out -ArgumentList "/S" -Wait
+Start-Process -FilePath $Out -ArgumentList "/S" -Wait
 
+# ===== DONE =====
 Write-Host ""
-Write-Host "✅ INSTALL SELESAI" -ForegroundColor Green
+Write-CyberText "✅ INSTALL SELESAI"
+Write-CyberText "Silakan restart jika diperlukan."
