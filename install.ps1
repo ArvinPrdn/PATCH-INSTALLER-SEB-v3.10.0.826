@@ -20,20 +20,19 @@ $Logo = @(
 "|_|                                    "
 )
 
-# Warna neon untuk vibe cyberpunk
-$Colors = @("Cyan", "Magenta", "Yellow", "Green", "Blue")
+# Warna ungu untuk cyberpunk vibe
+$Color = "Magenta"
 
-# Fungsi untuk animasi ketik per karakter
+# Fungsi animasi ketik super cepat
 function Write-CyberText($text) {
     foreach ($char in $text.ToCharArray()) {
-        $color = $Colors | Get-Random
-        Write-Host -NoNewline $char -ForegroundColor $color
-        Start-Sleep -Milliseconds (20 + (Get-Random -Minimum 0 -Maximum 40))
+        Write-Host -NoNewline $char -ForegroundColor $Color
+        Start-Sleep -Milliseconds 5  # animasi sangat cepat
     }
     Write-Host ""
 }
 
-# Menampilkan logo dengan animasi
+# Menampilkan logo dengan animasi cepat
 foreach ($line in $Logo) {
     Write-CyberText $line
 }
