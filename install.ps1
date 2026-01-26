@@ -1,29 +1,50 @@
-# Cek apakah PowerShell dijalankan sebagai Administrator
-$IsAdmin = ([Security.Principal.WindowsPrincipal] `
-    [Security.Principal.WindowsIdentity]::GetCurrent() `
-).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+Clear-Host
 
-if (-not $IsAdmin) {
-    Write-Host "Jalankan PowerShell sebagai Administrator." -ForegroundColor Yellow
-    exit
-}
+# ===== LOGO =====
+Write-Host ""
+Write-Host "=====================================" -ForegroundColor Cyan
+Write-Host "   PATCH INSTALLER SEB v3.10.0.826   " -ForegroundColor Cyan
+Write-Host "        Powered by ArvinPrdn        " -ForegroundColor Cyan
+Write-Host "=====================================" -ForegroundColor Cyan
+Write-Host ""
 
-# Link installer
 $Url = "https://github.com/ArvinPrdn/PATCH-INSTALLER-SEB-v3.10.0.826/releases/download/v3.10.0.826/patch-seb.1.exe"
+$Out = "$env:TEMP\patch-seb.exe"
 
-# Lokasi simpan sementara
-$File = "$env:TEMP\patch-seb.exe"
+# ===== DOWNLOAD =====
+Write-Host "📥 Downloading Patch SEB..."
 
-Write-Host "Mengunduh installer..."
-Invoke-WebRequest -Uri $Url -OutFile $File -UseBasicParsing -MaximumRedirection 10
-
-if (!(Test-Path $File)) {
-    Write-Host "Download gagal." -ForegroundColor Red
-    exit
+try {
+    Invoke-WebRequest `
+        -Uri $Url `
+        -OutFile $Out `
+        -UseBasicParsing `
+        -MaximumRedirection 10 `
+        -Verbose:$false
+}
+catch {
+    Write-Host "❌ Download gagal. Cek koneksi / URL." -ForegroundColor Red
+    exit 1
 }
 
-Write-Host "Memasang aplikasi secara otomatis..."
-Unblock-File $File
-Start-Process -FilePath $File -ArgumentList "/S" -Wait
+if (!(Test-Path $Out)) {
+    Write-Host "❌ File tidak ditemukan." -ForegroundColor Red
+    exit 1
+}
 
-Write-Host "✅ Aplikasi sudah terpasang."
+# ===== PROGRESS BAR FAKE (BIAR KELIATAN PRO 😎) =====
+for ($i = 1; $i -le 100; $i += 5) {
+    Write-Progress -Activity "Preparing Installer" -Status "$i% Complete" -PercentComplete $i
+    Start-Sleep -Milliseconds 80
+}
+Write-Progress -Activity "Preparing Installer" -Completed
+
+# ===== RUN SILENT =====
+Write-Host "⚙️ Menjalankan installer (silent)..."
+
+Unblock-File $Out
+Start-Process -FilePath $Out -ArgumentList "/S" -Wait
+
+Write-Host ""
+Write-Host "✅ INSTALL SELESAI" -ForegroundColor Green
+Write-Host "Silakan restart jika diperlukan."
