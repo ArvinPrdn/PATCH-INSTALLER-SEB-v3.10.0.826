@@ -4,167 +4,262 @@
 # ==================================================
 
 # ===== FIXED UTF-8 CONFIGURATION =====
-$OutputEncoding = [System.Text.Encoding]::UTF8
-[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-[Console]::InputEncoding = [System.Text.Encoding]::UTF8
+try {
+    $OutputEncoding = [System.Text.Encoding]::UTF8
+    [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+    [Console]::InputEncoding = [System.Text.Encoding]::UTF8
+} catch {
+    # Jika gagal set encoding, lanjut saja
+}
 
 Clear-Host
 
-# ===== COMPATIBLE ASCII LOGO (100% WORKS) =====
-$Logo = @"
-================================================================================
-            _         _          _______      _______ _   _               _       
-           | |       | |   /\   |  __ \ \    / /_   _| \ | |             | |      
-  _ __ ___ | |__   __| |  /  \  | |__) \ \  / /  | | |  \| |_ __  _ __ __| |_ __  
- | '_ ` _ \| '_ \ / _` | / /\ \ |  _  / \ \/ /   | | | . ` | '_ \| '__/ _` | '_ \ 
- | | | | | | | | | (_| |/ ____ \| | \ \  \  /   _| |_| |\  | |_) | | | (_| | | | |
- |_| |_| |_|_| |_|\__,_/_/    \_\_|  \_\  \/   |_____|_| \_| .__/|_|  \__,_|_| |_|
-                                                           | |                    
-                                                           |_|                    
-================================================================================
-"@
-
-# ===== DISPLAY LOGO (MAGENTA COLOR) =====
-Write-Host $Logo -ForegroundColor Magenta
-
-# ===== TITLE SECTION (CYAN COLOR) =====
-Write-Host "==============================================" -ForegroundColor Cyan
-Write-Host "    PATCH INSTALLER SEB v3.10.0.826" -ForegroundColor Cyan
-Write-Host "        Safe • Silent • Stable" -ForegroundColor Cyan
-Write-Host "      Powered by ArvinPrdn" -ForegroundColor Cyan
-Write-Host "==============================================" -ForegroundColor Cyan
+# ===== SIMPLE LOGO (NO UNICODE ISSUES) =====
+Write-Host "==================================================" -ForegroundColor Magenta
+Write-Host "    PATCH INSTALLER SEB v3.10.0.826" -ForegroundColor Magenta
+Write-Host "        Safe • Silent • Stable" -ForegroundColor Magenta
+Write-Host "==================================================" -ForegroundColor Magenta
 Write-Host ""
+
+# ===== CHECK ADMIN PRIVILEGES =====
+$isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+if (-not $isAdmin) {
+    Write-Host "[⚠] WARNING: Running without administrator privileges!" -ForegroundColor Yellow
+    Write-Host "    Some features may not work properly." -ForegroundColor Yellow
+    Write-Host ""
+}
 
 # ===== DOWNLOAD CONFIGURATION =====
 $Url = "https://github.com/ArvinPrdn/PATCH-INSTALLER-SEB-v3.10.0.826/releases/download/v3.10.0.826/patch-seb.1.exe"
 $Out = "$env:TEMP\patch-seb.exe"
 
-Write-Host "[📥] Downloading Patch SEB..." -ForegroundColor Yellow
+Write-Host "[1] Downloading Patch SEB..." -ForegroundColor Yellow
 
 # ===== DOWNLOAD FILE =====
 try {
-    # Coba menggunakan Invoke-WebRequest dengan error handling
-    if ($PSVersionTable.PSVersion.Major -ge 7) {
-        # PowerShell 7+ dengan -SkipCertificateCheck
-        Invoke-WebRequest -Uri $Url -OutFile $Out -UseBasicParsing -MaximumRedirection 10 -SkipCertificateCheck
-    } else {
-        # PowerShell 5.1
-        Invoke-WebRequest -Uri $Url -OutFile $Out -UseBasicParsing -MaximumRedirection 10
+    # Hapus file lama jika ada
+    if (Test-Path $Out) {
+        Remove-Item $Out -Force -ErrorAction SilentlyContinue
     }
     
-    Write-Host "[✓] Download completed successfully" -ForegroundColor Green
+    # Download dengan progress
+    Write-Host "   Downloading from: $Url" -ForegroundColor Gray
+    
+    $ProgressPreference = 'SilentlyContinue'
+    if ($PSVersionTable.PSVersion.Major -ge 7) {
+        Invoke-WebRequest -Uri $Url -OutFile $Out -UseBasicParsing -MaximumRedirection 10
+    } else {
+        Invoke-WebRequest -Uri $Url -OutFile $Out -UseBasicParsing -MaximumRedirection 10
+    }
+    $ProgressPreference = 'Continue'
+    
+    if (Test-Path $Out) {
+        $fileSize = (Get-Item $Out).Length / 1MB
+        Write-Host "[✓] Download completed ($($fileSize.ToString('0.0')) MB)" -ForegroundColor Green
+    } else {
+        Write-Host "[❌] ERROR: File not found after download" -ForegroundColor Red
+        exit 1
+    }
+    
 } catch {
     Write-Host ""
     Write-Host "[❌] ERROR: Download failed!" -ForegroundColor Red
-    Write-Host "Possible reasons:" -ForegroundColor Yellow
-    Write-Host "1. No internet connection" -ForegroundColor Yellow
-    Write-Host "2. URL not accessible" -ForegroundColor Yellow
-    Write-Host "3. Antivirus blocking" -ForegroundColor Yellow
+    Write-Host "   Error: $($_.Exception.Message)" -ForegroundColor DarkGray
     Write-Host ""
-    Write-Host "Error details: $_" -ForegroundColor DarkGray
+    Write-Host "Possible solutions:" -ForegroundColor Yellow
+    Write-Host "1. Check internet connection" -ForegroundColor White
+    Write-Host "2. Try running as administrator" -ForegroundColor White
+    Write-Host "3. Disable antivirus temporarily" -ForegroundColor White
     exit 1
 }
 
 # ===== VERIFY FILE =====
+Write-Host ""
+Write-Host "[2] Verifying downloaded file..." -ForegroundColor Yellow
+
 if (!(Test-Path $Out)) {
-    Write-Host "[❌] ERROR: Downloaded file not found" -ForegroundColor Red
+    Write-Host "[❌] ERROR: File not found" -ForegroundColor Red
     exit 1
 }
 
-$fileSize = (Get-Item $Out).Length / 1MB
-Write-Host "[ℹ] File size: $($fileSize.ToString('0.00')) MB" -ForegroundColor Cyan
-
-# ===== PROGRESS ANIMATION =====
-Write-Host ""
-Write-Host "[⚙️] Preparing installation..." -ForegroundColor Yellow
-
-# Animated progress bar
-$frames = @('|', '/', '-', '\')
-for ($i = 0; $i -lt 20; $i++) {
-    $frame = $frames[$i % 4]
-    Write-Host "`r[$frame] Processing... " -NoNewline -ForegroundColor Cyan
-    Start-Sleep -Milliseconds 100
+# Cek signature file (jika ada)
+try {
+    $signature = Get-AuthenticodeSignature -FilePath $Out
+    if ($signature.Status -eq "Valid") {
+        Write-Host "[✓] File is digitally signed" -ForegroundColor Green
+    } elseif ($signature.Status -eq "NotSigned") {
+        Write-Host "[⚠] File is not digitally signed" -ForegroundColor Yellow
+    }
+} catch {
+    Write-Host "[ℹ] Could not verify signature" -ForegroundColor Gray
 }
-Write-Host "`r[✓] Processing completed!  " -ForegroundColor Green
 
-# ===== INSTALLATION PROCESS =====
+# ===== INSTALLATION =====
 Write-Host ""
-Write-Host "[🔄] Running silent installation..." -ForegroundColor Yellow
+Write-Host "[3] Starting installation..." -ForegroundColor Yellow
 
 try {
-    # Unblock file jika diblokir
+    # Tampilkan info file
+    Write-Host "   File: $Out" -ForegroundColor Gray
+    
+    # Coba unblock file
     try {
         Unblock-File -Path $Out -ErrorAction SilentlyContinue
-        Write-Host "[🔓] File unblocked successfully" -ForegroundColor Cyan
-    } catch {
-        Write-Host "[ℹ] File unblock not required" -ForegroundColor Gray
-    }
+        Write-Host "   File unblocked" -ForegroundColor Gray
+    } catch {}
     
-    # Jalankan installer secara silent
-    Write-Host "[⚙️] Starting installer with /S flag..." -ForegroundColor Cyan
+    # ===== PERBAIKAN UTAMA DISINI =====
+    # Coba beberapa opsi argument untuk silent install
     
-    $process = Start-Process -FilePath $Out -ArgumentList "/S" -Wait -PassThru -NoNewWindow
+    $installArgs = @()
     
-    if ($process.ExitCode -eq 0) {
-        Write-Host "[✅] Installation completed successfully!" -ForegroundColor Green
-        Write-Host "[ℹ] Exit code: 0 (Success)" -ForegroundColor Cyan
+    # Coba dulu dengan /S (biasanya untuk InnoSetup)
+    $installArgs += @("/S", "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART")
+    
+    # Atau coba dengan /quiet (biasanya untuk MSI)
+    # $installArgs += @("/quiet", "/norestart")
+    
+    Write-Host "   Arguments: $($installArgs -join ' ')" -ForegroundColor Gray
+    
+    # PROSES INSTALLASI YANG BENAR
+    Write-Host "   Installing (please wait)..." -ForegroundColor Gray
+    
+    # Method 1: Gunakan Start-Process dengan redirect output
+    $processInfo = New-Object System.Diagnostics.ProcessStartInfo
+    $processInfo.FileName = $Out
+    $processInfo.Arguments = "/S"  # Coba hanya /S dulu
+    $processInfo.UseShellExecute = $false
+    $processInfo.CreateNoWindow = $true
+    $processInfo.RedirectStandardOutput = $true
+    $processInfo.RedirectStandardError = $true
+    
+    $process = New-Object System.Diagnostics.Process
+    $process.StartInfo = $processInfo
+    
+    # Mulai proses
+    if ($process.Start()) {
+        # Tunggu proses selesai (timeout 5 menit)
+        $process.WaitForExit(300000)
+        
+        if ($process.HasExited) {
+            $exitCode = $process.ExitCode
+            Write-Host "[✓] Installation process completed" -ForegroundColor Green
+            Write-Host "   Exit code: $exitCode" -ForegroundColor Gray
+            
+            if ($exitCode -eq 0) {
+                Write-Host "   Status: Success" -ForegroundColor Green
+            } else {
+                Write-Host "   Status: Completed with code $exitCode" -ForegroundColor Yellow
+            }
+        } else {
+            Write-Host "[⚠] Installation timeout, process still running" -ForegroundColor Yellow
+            $process.Kill()
+        }
     } else {
-        Write-Host "[⚠️] Installation completed with warning" -ForegroundColor Yellow
-        Write-Host "[ℹ] Exit code: $($process.ExitCode)" -ForegroundColor Cyan
+        Write-Host "[❌] Failed to start installer" -ForegroundColor Red
+        exit 1
     }
     
 } catch {
     Write-Host ""
-    Write-Host "[❌] ERROR: Installation failed!" -ForegroundColor Red
-    Write-Host "Possible reasons:" -ForegroundColor Yellow
-    Write-Host "1. User cancelled the installation" -ForegroundColor Yellow
-    Write-Host "2. Insufficient permissions" -ForegroundColor Yellow
-    Write-Host "3. Antivirus blocked the installation" -ForegroundColor Yellow
+    Write-Host "[❌] ERROR during installation!" -ForegroundColor Red
+    Write-Host "   Error: $($_.Exception.Message)" -ForegroundColor DarkGray
+    
+    # Coba alternatif method
     Write-Host ""
-    Write-Host "Error details: $_" -ForegroundColor DarkGray
-    exit 1
+    Write-Host "[🔄] Trying alternative installation method..." -ForegroundColor Yellow
+    
+    try {
+        # Method alternatif: langsung execute
+        Write-Host "   Running: $Out /SILENT" -ForegroundColor Gray
+        & $Out /SILENT
+        Write-Host "[✓] Alternative method completed" -ForegroundColor Green
+    } catch {
+        Write-Host "[❌] All installation methods failed" -ForegroundColor Red
+        Write-Host "   Please run the installer manually:" -ForegroundColor Yellow
+        Write-Host "   $Out" -ForegroundColor White
+        exit 1
+    }
+}
+
+# ===== VERIFY INSTALLATION =====
+Write-Host ""
+Write-Host "[4] Verifying installation..." -ForegroundColor Yellow
+
+# Tunggu sebentar untuk proses instalasi selesai
+Start-Sleep -Seconds 3
+
+# Cek beberapa lokasi umum
+$checkPaths = @(
+    "$env:ProgramFiles\SEB",
+    "$env:ProgramFiles(x86)\SEB", 
+    "$env:LOCALAPPDATA\SEB",
+    "$env:APPDATA\SEB"
+)
+
+$installed = $false
+foreach ($path in $checkPaths) {
+    if (Test-Path $path) {
+        Write-Host "[✓] Found installation at: $path" -ForegroundColor Green
+        $installed = $true
+        
+        # Tampilkan file/folder yang ada
+        try {
+            $items = Get-ChildItem -Path $path -ErrorAction SilentlyContinue | Select-Object -First 5
+            if ($items) {
+                Write-Host "   Contents:" -ForegroundColor Gray
+                foreach ($item in $items) {
+                    Write-Host "   - $($item.Name)" -ForegroundColor Gray
+                }
+            }
+        } catch {}
+        break
+    }
+}
+
+if (-not $installed) {
+    Write-Host "[⚠] Could not find installation in standard locations" -ForegroundColor Yellow
+    Write-Host "   Application may be installed elsewhere" -ForegroundColor Gray
 }
 
 # ===== CLEANUP =====
 Write-Host ""
-Write-Host "[🧹] Cleaning up temporary files..." -ForegroundColor Yellow
+Write-Host "[5] Cleaning up..." -ForegroundColor Yellow
 
 try {
     if (Test-Path $Out) {
         Remove-Item -Path $Out -Force -ErrorAction SilentlyContinue
-        Write-Host "[✓] Temporary files cleaned up" -ForegroundColor Green
+        Write-Host "[✓] Temporary file removed" -ForegroundColor Green
     }
 } catch {
-    Write-Host "[ℹ] Could not clean up temporary files" -ForegroundColor Gray
+    Write-Host "[ℹ] Could not remove temporary file" -ForegroundColor Gray
 }
 
 # ===== FINAL MESSAGE =====
 Write-Host ""
-Write-Host "=" * 50 -ForegroundColor Cyan
-Write-Host "       INSTALLATION COMPLETED SUCCESSFULLY      " -ForegroundColor Green
-Write-Host "=" * 50 -ForegroundColor Cyan
+Write-Host "=" * 60 -ForegroundColor Cyan
+Write-Host "              INSTALLATION COMPLETED              " -ForegroundColor Green
+Write-Host "=" * 60 -ForegroundColor Cyan
 Write-Host ""
 Write-Host "[📋] Summary:" -ForegroundColor Cyan
-Write-Host "• Patch SEB v3.10.0.826 has been installed" -ForegroundColor White
-Write-Host "• Installation mode: Silent (/S)" -ForegroundColor White
-Write-Host "• Powered by ArvinPrdn" -ForegroundColor White
+Write-Host "• Patch SEB v3.10.0.826 installer downloaded" -ForegroundColor White
+Write-Host "• Silent installation attempted" -ForegroundColor White
+Write-Host "• Temporary files cleaned up" -ForegroundColor White
 Write-Host ""
-Write-Host "[💡] Recommendations:" -ForegroundColor Yellow
-Write-Host "1. Restart your computer if prompted" -ForegroundColor White
-Write-Host "2. Check program in Start Menu" -ForegroundColor White
-Write-Host "3. Run the application to verify installation" -ForegroundColor White
+Write-Host "[💡] Next steps:" -ForegroundColor Yellow
+Write-Host "1. Check Start Menu for 'SEB' application" -ForegroundColor White
+Write-Host "2. Restart computer if required" -ForegroundColor White
+Write-Host "3. Run the application to verify" -ForegroundColor White
 Write-Host ""
-Write-Host "[⏱️] Script execution time: $((Get-Date).ToString('HH:mm:ss'))" -ForegroundColor Cyan
+Write-Host "[ℹ] Note: If installation failed, try running:" -ForegroundColor Cyan
+Write-Host "    $Out" -ForegroundColor White
+Write-Host "    manually with right-click → Run as Administrator" -ForegroundColor White
 Write-Host ""
 
-# ===== PAUSE BEFORE EXIT (OPTIONAL) =====
-if ($Host.Name -match "ISE") {
-    # Jika di PowerShell ISE, tunggu enter
-    Write-Host "Press Enter to exit..." -ForegroundColor Gray -NoNewline
-    Read-Host
-} else {
-    # Jika di PowerShell Console, tunggu 3 detik
-    Start-Sleep -Seconds 3
+# ===== PAUSE =====
+if ($Host.Name -notlike "*ISE*") {
+    Write-Host "Press any key to continue..." -ForegroundColor Gray -NoNewline
+    $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
 }
 
 exit 0
