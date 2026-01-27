@@ -3,6 +3,33 @@
 # Safe • Silent • Stable
 # ==================================================
 
+# ===== SET CONSOLE TO FULLSCREEN =====
+try {
+    # Cek jika di PowerShell Console (bukan ISE)
+    if ($Host.Name -eq 'ConsoleHost') {
+        # Simpan ukuran console saat ini
+        $console = $Host.UI.RawUI
+        $originalSize = $console.WindowSize
+        
+        # Set ke ukuran maksimum
+        $maxSize = $console.MaxPhysicalWindowSize
+        $console.BufferSize = New-Object System.Management.Automation.Host.Size($maxSize.Width, 5000)
+        $console.WindowSize = New-Object System.Management.Automation.Host.Size($maxSize.Width, $maxSize.Height)
+        
+        # Set window position ke (0,0) untuk fullscreen effect
+        $console.WindowPosition = New-Object System.Management.Automation.Host.Coordinates(0, 0)
+        
+        # Set warna background dan foreground
+        $console.BackgroundColor = "Black"
+        $console.ForegroundColor = "Gray"
+        
+        # Clear dengan background baru
+        Clear-Host
+    }
+} catch {
+    Write-Host "Note: Could not set fullscreen mode" -ForegroundColor Yellow
+}
+
 # ===== FIXED UTF-8 CONFIGURATION =====
 try {
     [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -12,25 +39,71 @@ try {
 
 Clear-Host
 
-# ===== ASCII ART LOGO =====
-$AsciiLogo = @"
+# ===== ASCII ART LOGO - PART 1 =====
+$AsciiLogo1 = @"
+                                                                                        
+                                                                                        
+                5                                                        B              
+            F   3D                                                       2              
+             5   1                                                      35  8F          
+              0F A06                                                  E04  38           
+               33 B01D                                               203 91             
+             AB C05 400A                                           101 C03  3           
+              02F D15 6005                                      9101B914  50F           
+               400B  32E51004                                C0012B62A  201             
+              B  10028  53830003D                         61001763E F31008  7           
+              518  A20003AE9711001                      4000149CD600017  D21            
+                2003  F100010101000                    1010100000008  8001C B           
+              D13A  E525BDC4000009       D8835           0000129DC833B  C516            
+                300000010000101011D       700002        201000010000000011E             
+                   E8210000100100001C      01010E     2001001100000026C                 
+                 C          C3010100009   4010003   1001001018          E               
+                  700000001011000010100001010101000010101000110100000001                
+                         B73018C101001010011101010100100017C30259D                      
+                      7435B    600101010100E 40001010010102    F7436D                   
+                         CCB4101D600100010EF0F90100010103 30128CB                       
+                           A44E 601 13350B 000D5006150E401  637                         
+                              8001 50 2 3 00000 90 5 20 7003F                           
+                                  916 2  0000000B  8AF04                                
+                                     F  0000 0000E   F                                  
+                                       4000   00009                                     
+                                      5000B    0000C                                    
+                                     70005      00008                                   
+                            C       E0000144444D 10008       E                          
+                              34D   000000000007  00007   81B                           
+                                94                      D3                              
+                                88842127063111118146113797B                             
+                                  5326901B0000008704A323E                               
+                                    B89C 50101002 EA8A                                  
+                                          400011                                        
+                                           A004                                         
+                                            E8                                          
+                                                                                        
+                                                                                        
+                                                                                        
+"@
+
+# ===== ASCII ART LOGO - PART 2 =====
+$AsciiLogo2 = @"
             _         _    _    ______     _____ _   _               _       
   _ __ ___ | |__   __| |  / \  |  _ \ \   / /_ _| \ | |_ __  _ __ __| |_ __  
  | '_ ` _ \| '_ \ / _` | / _ \ | |_) \ \ / / | ||  \| | '_ \| '__/ _` | '_ \ 
  | | | | | | | | | (_| |/ ___ \|  _ < \ V /  | || |\  | |_) | | | (_| | | | |
  |_| |_| |_|_| |_|\__,_/_/   \_\_| \_\ \_/  |___|_| \_| .__/|_|  \__,_|_| |_|
-                                                      |_|                     
+                                                      |_|
 "@
 
-# ===== DISPLAY ASCII LOGO =====
-Write-Host $AsciiLogo -ForegroundColor Magenta
+# ===== DISPLAY ASCII LOGOS =====
+Write-Host $AsciiLogo1 -ForegroundColor Magenta
+Write-Host $AsciiLogo2 -ForegroundColor Cyan
+Write-Host "`n"
 
 # ===== TITLE SECTION =====
-Write-Host "`n" + ("=" * 70) -ForegroundColor Cyan
-Write-Host "          PATCH INSTALLER SEB v3.10.0.826" -ForegroundColor Cyan
-Write-Host "              Safe • Silent • Stable" -ForegroundColor Cyan
-Write-Host "              Powered by ArvinPrdn" -ForegroundColor Cyan
-Write-Host ("=" * 70) -ForegroundColor Cyan
+Write-Host ("=" * 90) -ForegroundColor Cyan
+Write-Host "                    PATCH INSTALLER SEB v3.10.0.826" -ForegroundColor Cyan
+Write-Host "                        Safe • Silent • Stable" -ForegroundColor Cyan
+Write-Host "                        Powered by ArvinPrdn" -ForegroundColor Cyan
+Write-Host ("=" * 90) -ForegroundColor Cyan
 Write-Host "`n"
 
 # ===== CHECK ADMIN PRIVILEGES =====
@@ -63,34 +136,46 @@ try {
     
     # Animasi loading sederhana
     $dots = @('.   ', '..  ', '... ', '....')
+    $counter = 0
+    
+    # Mulai download di background job
     $job = Start-Job -ScriptBlock {
         param($Url, $Out)
-        if ($PSVersionTable.PSVersion.Major -ge 7) {
-            Invoke-WebRequest -Uri $Url -OutFile $Out -UseBasicParsing -MaximumRedirection 10
-        } else {
-            Invoke-WebRequest -Uri $Url -OutFile $Out -UseBasicParsing -MaximumRedirection 10
+        $ProgressPreference = 'SilentlyContinue'
+        try {
+            if ($PSVersionTable.PSVersion.Major -ge 7) {
+                Invoke-WebRequest -Uri $Url -OutFile $Out -UseBasicParsing -MaximumRedirection 10 -SkipCertificateCheck
+            } else {
+                Invoke-WebRequest -Uri $Url -OutFile $Out -UseBasicParsing -MaximumRedirection 10
+            }
+            return $true
+        } catch {
+            return $false
         }
     } -ArgumentList $Url, $Out
     
     # Tampilkan animasi saat download
-    $counter = 0
     while ($job.State -eq 'Running') {
         $counter = ($counter + 1) % 4
         Write-Host "`r   Downloading$($dots[$counter])" -NoNewline -ForegroundColor Gray
         Start-Sleep -Milliseconds 300
     }
     
+    # Dapatkan hasil
+    $result = Receive-Job $job
+    Remove-Job $job -Force
+    
     # Hapus animasi
     Write-Host "`r" + (" " * 50) -NoNewline
     Write-Host "`r" -NoNewline
     
     # Periksa hasil download
-    if (Test-Path $Out) {
+    if ($result -and (Test-Path $Out)) {
         $fileSize = (Get-Item $Out).Length / 1MB
         Write-Host "[✓] Download completed successfully" -ForegroundColor Green
         Write-Host "    File size: $($fileSize.ToString('0.00')) MB" -ForegroundColor Gray
     } else {
-        Write-Host "[❌] ERROR: File not found after download" -ForegroundColor Red
+        Write-Host "[❌] ERROR: Download failed or file not found" -ForegroundColor Red
         exit 1
     }
     
@@ -258,9 +343,9 @@ try {
 }
 
 # ===== FINAL MESSAGE =====
-Write-Host "`n" + ("=" * 70) -ForegroundColor Cyan
-Write-Host "                 INSTALLATION COMPLETED                 " -ForegroundColor Green
-Write-Host ("=" * 70) -ForegroundColor Cyan
+Write-Host "`n" + ("=" * 90) -ForegroundColor Cyan
+Write-Host "                          INSTALLATION COMPLETED                          " -ForegroundColor Green
+Write-Host ("=" * 90) -ForegroundColor Cyan
 Write-Host "`n"
 
 Write-Host "[📋] Summary:" -ForegroundColor Cyan
