@@ -191,31 +191,25 @@ function Show-ProgressBar {
 }
 
 # ==================================================
-# FUNGSI COUNTDOWN ANIMASI - DIPERBAIKI
+# FUNGSI COUNTDOWN ANIMASI YANG LEBIH SEDERHANA
 # ==================================================
 
 function Show-Countdown {
     param(
         [int]$Seconds = 3,
-        [string]$Message = "Starting in"
+        [string]$Message = "Opening installer in"
     )
     
-    # PERBAIKAN: Gunakan ${Message} untuk menghindari masalah dengan karakter ':'
-    Write-Host "`n   ${Message}: " -NoNewline -ForegroundColor Yellow
+    # Cara yang lebih sederhana tanpa interpolasi kompleks
+    $msgText = "$Message" + ": "
+    
+    Write-Host "`n   $msgText" -NoNewline -ForegroundColor Yellow
     
     for ($i = $Seconds; $i -gt 0; $i--) {
-        # Efek bouncing number
-        $sizes = @(1.2, 1.4, 1.2, 1.0)
-        foreach ($size in $sizes) {
-            # PERBAIKAN: Gunakan ${Message} di sini juga
-            Write-Host "`r   ${Message}: " -NoNewline -ForegroundColor Yellow
-            Write-Host "$i " -NoNewline -ForegroundColor Cyan
-            Start-Sleep -Milliseconds 50
-        }
+        Write-Host "$i " -NoNewline -ForegroundColor Cyan
+        Start-Sleep -Seconds 1
     }
     
-    # PERBAIKAN: Gunakan ${Message} di sini juga
-    Write-Host "`r   ${Message}: " -NoNewline -ForegroundColor Yellow
     Write-Host "GO! ✓" -ForegroundColor Green
     Write-Host "`n"
 }
@@ -275,28 +269,25 @@ try {
     # Mulai download
     $ProgressPreference = 'SilentlyContinue'
     
-    # Buat job untuk download dengan animasi
-    $job = Start-Job -ScriptBlock {
-        param($Url, $Out)
-        try {
-            if ($PSVersionTable.PSVersion.Major -ge 7) {
-                Invoke-WebRequest -Uri $Url -OutFile $Out -UseBasicParsing -MaximumRedirection 10 -SkipCertificateCheck
-            } else {
-                Invoke-WebRequest -Uri $Url -OutFile $Out -UseBasicParsing -MaximumRedirection 10
-            }
-            return $true
-        } catch {
-            return $false
-        }
-    } -ArgumentList $Url, $Out
+    # Gunakan metode yang lebih sederhana tanpa job
+    Write-Host "`n   Downloading..." -NoNewline -ForegroundColor Cyan
     
-    # Animasi progress bar saat download
-    Show-ProgressBar -Message "Downloading" -Duration 3 -Color "Cyan"
+    # Download file langsung
+    if ($PSVersionTable.PSVersion.Major -ge 7) {
+        Invoke-WebRequest -Uri $Url -OutFile $Out -UseBasicParsing -MaximumRedirection 10 -SkipCertificateCheck
+    } else {
+        Invoke-WebRequest -Uri $Url -OutFile $Out -UseBasicParsing -MaximumRedirection 10
+    }
     
-    $result = Receive-Job $job
-    Remove-Job $job -Force
+    # Animasi sederhana saat download
+    for ($i = 0; $i -lt 10; $i++) {
+        Write-Host "." -NoNewline -ForegroundColor Cyan
+        Start-Sleep -Milliseconds 200
+    }
     
-    if ($result -and (Test-Path $Out)) {
+    Write-Host " ✓" -ForegroundColor Green
+    
+    if (Test-Path $Out) {
         $fileSize = (Get-Item $Out).Length / 1MB
         Write-Host "[✓] Download completed successfully" -ForegroundColor Green
         Write-Host "    File size: $($fileSize.ToString('0.00')) MB" -ForegroundColor Gray
@@ -316,7 +307,13 @@ Write-Host "`n"
 # ===== VERIFY FILE =====
 Write-Host "[2] Verifying downloaded file..." -ForegroundColor Yellow
 
-Show-ProgressBar -Message "Verifying file" -Duration 1 -Color "Yellow"
+# Animasi verifikasi sederhana
+Write-Host "   Verifying..." -NoNewline -ForegroundColor Gray
+for ($i = 0; $i -lt 5; $i++) {
+    Write-Host "." -NoNewline -ForegroundColor Gray
+    Start-Sleep -Milliseconds 200
+}
+Write-Host " ✓" -ForegroundColor Green
 
 if (!(Test-Path $Out)) {
     Write-Host "[❌] ERROR: File not found" -ForegroundColor Red
@@ -345,7 +342,7 @@ try {
     Write-Host "`n   [INFO] Installer will now open with graphical interface" -ForegroundColor Cyan
     Write-Host "   Please follow the installation wizard manually" -ForegroundColor Cyan
     
-    # Countdown dengan animasi
+    # Countdown dengan animasi sederhana
     Show-Countdown -Seconds 3 -Message "Opening installer in"
     
     # Jalankan installer dengan GUI normal
@@ -422,13 +419,13 @@ Write-Host "                          INSTALLATION COMPLETED                    
 Write-Host ("=" * 90) -ForegroundColor Cyan
 Write-Host "`n"
 
-Write-Typewriter -Text "[📋] Summary:" -Color "Cyan" -Delay 20
+Write-Host "[📋] Summary:" -ForegroundColor Cyan
 Write-Host "• Patch SEB installer downloaded successfully" -ForegroundColor White
 Write-Host "• Installer launched with graphical interface" -ForegroundColor White
 Write-Host "• Temporary files cleaned up" -ForegroundColor White
 Write-Host ""
 
-Write-Typewriter -Text "[💡] Next steps:" -Color "Yellow" -Delay 20
+Write-Host "[💡] Next steps:" -ForegroundColor Yellow
 Write-Host "1. Check if installation completed in the wizard" -ForegroundColor White
 Write-Host "2. Look for 'SEB' in Start Menu" -ForegroundColor White
 Write-Host "3. Restart computer if prompted" -ForegroundColor White
