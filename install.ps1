@@ -1,9 +1,4 @@
-# ==================================================
-# PATCH INSTALLER SEB v3.10.0.826
-# Safe • Silent • Stable
-# ==================================================
 
-# ===== SET CONSOLE TO FULLSCREEN (IMPROVED) =====
 function Set-FullScreen {
     try {
         if ($Host.Name -eq 'ConsoleHost') {
