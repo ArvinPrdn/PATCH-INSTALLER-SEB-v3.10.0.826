@@ -152,11 +152,16 @@ Write-Host "`n"
 
 # ===== TITLE SECTION WITH ANIMATION =====
 $titleLines = @(
-    "=" * 90,
-    "                    PATCH INSTALLER SEB v3.10.0.826",
-    "                        Safe • Silent • Stable",
-    "                        Powered by ArvinPrdn",
-    "=" * 90
+# ===== TITLE SECTION WITH ANIMATION =====
+Write-Host "╔══════════════════════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
+Write-Host "║                                                                              ║" -ForegroundColor Cyan
+Write-Host "║                    PATCH INSTALLER SEB v3.10.0.826                           ║" -ForegroundColor Cyan
+Write-Host "║                        Safe • Silent • Stable                                ║" -ForegroundColor Cyan
+Write-Host "║                        Powered by ArvinPrdn                                  ║" -ForegroundColor Cyan
+Write-Host "║                                                                              ║" -ForegroundColor Cyan
+Write-Host "╚══════════════════════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
+
+Write-Host "`n`n"
 )
 
 foreach ($line in $titleLines) {
