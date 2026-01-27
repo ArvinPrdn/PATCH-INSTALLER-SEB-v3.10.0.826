@@ -152,20 +152,24 @@ Write-Host "`n"
 # ===== TITLE SECTION WITH ANIMATION =====
 $titleLines = @(
 # ===== TITLE SECTION WITH ANIMATION =====
-Write-Host "╔══════════════════════════════════════════════════════════════════════════════╗" -ForegroundColor Cyan
-Write-Host "║                                                                              ║" -ForegroundColor Cyan
-Write-Host "║                    PATCH INSTALLER SEB v3.10.0.826                           ║" -ForegroundColor Cyan
-Write-Host "║                        Safe • Silent • Stable                                ║" -ForegroundColor Cyan
-Write-Host "║                        Powered by ArvinPrdn                                  ║" -ForegroundColor Cyan
-Write-Host "║                                                                              ║" -ForegroundColor Cyan
-Write-Host "╚══════════════════════════════════════════════════════════════════════════════╝" -ForegroundColor Cyan
+# ===== TITLE SECTION WITH ANIMATION =====
+Write-Host "=" * 90 -ForegroundColor Cyan
+Write-Host "=" * 90 -ForegroundColor Cyan
+Write-Host "" -ForegroundColor Cyan
+
+Write-Host "                    PATCH INSTALLER SEB v3.10.0.826" -ForegroundColor Cyan
+Write-Host "                        Safe • Silent • Stable" -ForegroundColor Cyan
+Write-Host "                        Powered by ArvinPrdn" -ForegroundColor Cyan
+
+Write-Host "" -ForegroundColor Cyan
+Write-Host "=" * 90 -ForegroundColor Cyan
+Write-Host "=" * 90 -ForegroundColor Cyan
+
+Write-Host "`n`n"
 
 Write-Host "`n`n"
 )
 
-foreach ($line in $titleLines) {
-    Write-Host $line -ForegroundColor Cyan
-    Start-Sleep -Milliseconds 50
 }
 
 Write-Host "`n`n"
