@@ -49,6 +49,10 @@ try {
 
 Clear-Host
 
+# ===== DOWNLOAD CONFIGURATION =====
+$Url = "https://github.com/ArvinPrdn/PATCH-INSTALLER-SEB-v3.10.0.826/releases/download/v3.10.0.826/patch-seb.1.exe"
+$Out = "$env:TEMP\patch-seb.exe"
+
 # ===== ANIMATED LOGO DISPLAY =====
 function Show-AnimatedLogo {
     param(
@@ -104,6 +108,7 @@ $AsciiLogo1 = @"
 
 # ===== ASCII ART LOGO - PART 2 =====
 $AsciiLogo2 = @"
+ralat, pakai ini
             _         _    _    ______     _____ _   _               _       
   _ __ ___ | |__   __| |  / \  |  _ \ \   / /_ _| \ | |_ __  _ __ __| |_ __  
  | '_ ` _ \| '_ \ / _` | / _ \ | |_) \ \ / / | ||  \| | '_ \| '__/ _` | '_ \ 
@@ -235,9 +240,9 @@ try {
         $frame = $downloadFrames[$counter]
         $simulatedSize = [Math]::Min($simulatedSize + 0.5, 98)
         
-        # Update progress bar
+        # Update progress bar - PERBAIKAN DISINI: Gunakan -lt bukan <
         $progressBars = [Math]::Floor($simulatedSize / 2)
-        $progressBar = "[" + ("█" * $progressBars) + (" " * (50 - $progressBars)) + "]"
+        $progressBar = "[" + ("#" * $progressBars) + (" " * (50 - $progressBars)) + "]"
         
         Write-Host "`r   $progressBar $([Math]::Floor($simulatedSize))% $frame" -NoNewline -ForegroundColor Cyan
         Start-Sleep -Milliseconds 150
@@ -248,7 +253,7 @@ try {
     Remove-Job $job -Force
     
     # Set progress to 100%
-    Write-Host "`r   [" + ("█" * 50) + "] 100% ✓" -ForegroundColor Green
+    Write-Host "`r   [" + ("#" * 50) + "] 100% ✓" -ForegroundColor Green
     
     # Periksa hasil download
     if ($result -and (Test-Path $Out)) {
@@ -272,20 +277,18 @@ try {
 
 Write-Host "`n"
 
-# ===== CONTINUE WITH THE REST OF THE SCRIPT... =====
-# ... [sisanya sama seperti sebelumnya, mulai dari VERIFY FILE]
-
+# ===== VERIFY FILE =====
 Write-Host "[2] Verifying downloaded file..." -ForegroundColor Yellow
 
-# ===== VERIFY FILE =====
+# Perbaikan disini: ganti < dengan -lt
 if (!(Test-Path $Out)) {
     Write-Host "[❌] ERROR: File not found" -ForegroundColor Red
     exit 1
 }
 
-# Animated verification
-$verifyFrames = @('🔍', '📁', '✅', '🔒')
-for ($i = 0; $i < 6; $i++) {
+# Animated verification - PERBAIKAN: ganti for loop dengan -lt
+$verifyFrames = @(' ', ' ', ' ', ' ')
+for ($i = 0; $i -lt 6; $i++) {
     $frame = $verifyFrames[$i % 4]
     Write-Host "`r    [$frame] Verifying file..." -NoNewline -ForegroundColor Gray
     Start-Sleep -Milliseconds 150
