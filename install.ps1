@@ -191,7 +191,7 @@ function Show-ProgressBar {
 }
 
 # ==================================================
-# FUNGSI COUNTDOWN ANIMASI
+# FUNGSI COUNTDOWN ANIMASI - DIPERBAIKI
 # ==================================================
 
 function Show-Countdown {
@@ -200,19 +200,22 @@ function Show-Countdown {
         [string]$Message = "Starting in"
     )
     
-    Write-Host "`n   $Message: " -NoNewline -ForegroundColor Yellow
+    # PERBAIKAN: Gunakan ${Message} untuk menghindari masalah dengan karakter ':'
+    Write-Host "`n   ${Message}: " -NoNewline -ForegroundColor Yellow
     
     for ($i = $Seconds; $i -gt 0; $i--) {
         # Efek bouncing number
         $sizes = @(1.2, 1.4, 1.2, 1.0)
         foreach ($size in $sizes) {
-            Write-Host "`r   $Message: " -NoNewline -ForegroundColor Yellow
+            # PERBAIKAN: Gunakan ${Message} di sini juga
+            Write-Host "`r   ${Message}: " -NoNewline -ForegroundColor Yellow
             Write-Host "$i " -NoNewline -ForegroundColor Cyan
             Start-Sleep -Milliseconds 50
         }
     }
     
-    Write-Host "`r   $Message: " -NoNewline -ForegroundColor Yellow
+    # PERBAIKAN: Gunakan ${Message} di sini juga
+    Write-Host "`r   ${Message}: " -NoNewline -ForegroundColor Yellow
     Write-Host "GO! ✓" -ForegroundColor Green
     Write-Host "`n"
 }
