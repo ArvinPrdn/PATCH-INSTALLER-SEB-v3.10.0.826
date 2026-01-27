@@ -3,32 +3,42 @@
 # Safe • Silent • Stable
 # ==================================================
 
-# ===== SET CONSOLE TO FULLSCREEN =====
-try {
-    # Cek jika di PowerShell Console (bukan ISE)
-    if ($Host.Name -eq 'ConsoleHost') {
-        # Simpan ukuran console saat ini
-        $console = $Host.UI.RawUI
-        $originalSize = $console.WindowSize
-        
-        # Set ke ukuran maksimum
-        $maxSize = $console.MaxPhysicalWindowSize
-        $console.BufferSize = New-Object System.Management.Automation.Host.Size($maxSize.Width, 5000)
-        $console.WindowSize = New-Object System.Management.Automation.Host.Size($maxSize.Width, $maxSize.Height)
-        
-        # Set window position ke (0,0) untuk fullscreen effect
-        $console.WindowPosition = New-Object System.Management.Automation.Host.Coordinates(0, 0)
-        
-        # Set warna background dan foreground
-        $console.BackgroundColor = "Black"
-        $console.ForegroundColor = "Gray"
-        
-        # Clear dengan background baru
-        Clear-Host
+# ===== SET CONSOLE TO FULLSCREEN (IMPROVED) =====
+function Set-FullScreen {
+    try {
+        if ($Host.Name -eq 'ConsoleHost') {
+            $console = $Host.UI.RawUI
+            
+            # Get current window size
+            $currentSize = $console.WindowSize
+            
+            # Set buffer size larger to prevent clipping
+            $bufferSize = $console.BufferSize
+            $newBufferSize = New-Object System.Management.Automation.Host.Size(120, 3000)
+            $console.BufferSize = $newBufferSize
+            
+            # Get maximum window size
+            $maxWindowSize = $console.MaxWindowSize
+            
+            # Set window size to maximum
+            $newSize = New-Object System.Management.Automation.Host.Size($maxWindowSize.Width, $maxWindowSize.Height)
+            $console.WindowSize = $newSize
+            
+            # Clear screen with black background
+            $console.BackgroundColor = "Black"
+            $console.ForegroundColor = "Gray"
+            Clear-Host
+            
+            return $true
+        }
+        return $false
+    } catch {
+        return $false
     }
-} catch {
-    Write-Host "Note: Could not set fullscreen mode" -ForegroundColor Yellow
 }
+
+# Try to set fullscreen
+$fullscreenSuccess = Set-FullScreen
 
 # ===== FIXED UTF-8 CONFIGURATION =====
 try {
@@ -39,48 +49,57 @@ try {
 
 Clear-Host
 
+# ===== ANIMATED LOGO DISPLAY =====
+function Show-AnimatedLogo {
+    param(
+        [string]$Logo,
+        [string]$Color = "Magenta",
+        [int]$DelayPerLine = 30
+    )
+    
+    $lines = $Logo -split "`n"
+    foreach ($line in $lines) {
+        Write-Host $line -ForegroundColor $Color
+        if ($DelayPerLine -gt 0) {
+            Start-Sleep -Milliseconds $DelayPerLine
+        }
+    }
+}
+
 # ===== ASCII ART LOGO - PART 1 =====
 $AsciiLogo1 = @"
-                                                                                        
-                                                                                        
-                5                                                        B              
-            F   3D                                                       2              
-             5   1                                                      35  8F          
-              0F A06                                                  E04  38           
-               33 B01D                                               203 91             
-             AB C05 400A                                           101 C03  3           
-              02F D15 6005                                      9101B914  50F           
-               400B  32E51004                                C0012B62A  201             
-              B  10028  53830003D                         61001763E F31008  7           
-              518  A20003AE9711001                      4000149CD600017  D21            
-                2003  F100010101000                    1010100000008  8001C B           
-              D13A  E525BDC4000009       D8835           0000129DC833B  C516            
-                300000010000101011D       700002        201000010000000011E             
-                   E8210000100100001C      01010E     2001001100000026C                 
-                 C          C3010100009   4010003   1001001018          E               
-                  700000001011000010100001010101000010101000110100000001                
-                         B73018C101001010011101010100100017C30259D                      
-                      7435B    600101010100E 40001010010102    F7436D                   
-                         CCB4101D600100010EF0F90100010103 30128CB                       
-                           A44E 601 13350B 000D5006150E401  637                         
-                              8001 50 2 3 00000 90 5 20 7003F                           
-                                  916 2  0000000B  8AF04                                
-                                     F  0000 0000E   F                                  
-                                       4000   00009                                     
-                                      5000B    0000C                                    
-                                     70005      00008                                   
-                            C       E0000144444D 10008       E                          
-                              34D   000000000007  00007   81B                           
-                                94                      D3                              
-                                88842127063111118146113797B                             
-                                  5326901B0000008704A323E                               
-                                    B89C 50101002 EA8A                                  
-                                          400011                                        
-                                           A004                                         
-                                            E8                                          
-                                                                                        
-                                                                                        
-                                                                                        
+                                                                            
+              .                                                .            
+              *                                                #            
+           +  #=                                              :%  *         
+           .%  %*                                            +%  %          
+             %+ %%-                                        :%% +%           
+           .* -%--%%=                                    -%%=-%= =.         
+            #%= -%==%%#                                #%%+=%= =%*          
+             -%%#. +#+#%%#.                        .#%%#+#*  #%%-           
+            %= :#%%%=.-*#%%%%                    %%%%#+-.-%%%#: =%          
+             +%%=  *%%%%%%%%%%.                :%%%%%%%%%%*. =%%+           
+            -%*:.-*%+:=*%%%%#      .-+#=         %%%%%*=:=%*-.:*%=          
+              #%%%%%%%%%%%%%%#      -%%%%-      #%%%%%%%%%%%%%%%            
+                   :=*%%%%%%%%%#     %%%%%    #%%%%%%%%%*=:                 
+               ##+=--=+*#%%%%%%%%%-.%%%%%%=:%%%%%%%%%#*+=---+*#             
+                 *%%#+-=#%%%%%%%%%%%%%%%%%%%%%%%%%%%%#=-+#%%*               
+                  .#%%%=   *%%%%%%%%%+ %%%%%%%%%%%*   -%%%#:                
+                      --*%%%:%%%%%%%+.@:%%%%%%%%%.#%%*--                    
+                        =+ -%%-%*%+%.@@@ #%+%*%-%%- ++                      
+                         =%%% +% *  @@@@@ % *:%+ %%%+                       
+                            :%%:#- @@@@@@@. -* %%.                          
+                                  @@@# =@@@                                 
+                                 #@@#   =@@@.                               
+                                %@@@     +@@@-                              
+                        -      =@@@@@@@@@ -@@@-      -                      
+                          =%%*-@@@@@@@@@@  =@@@-*%%+                        
+                                                                            
+                            :%%%%+%=#%%%%%=%+#%%%-                          
+                               +#*=-%%%%%%-+**+                             
+                                    =%%%%=                                  
+                                     .%%.                                   
+                                                                            
 "@
 
 # ===== ASCII ART LOGO - PART 2 =====
@@ -93,21 +112,70 @@ $AsciiLogo2 = @"
                                                       |_|
 "@
 
-# ===== DISPLAY ASCII LOGOS =====
-Write-Host $AsciiLogo1 -ForegroundColor Magenta
-Write-Host $AsciiLogo2 -ForegroundColor Cyan
+# ===== ANIMATED LOADING EFFECT BEFORE LOGO =====
+Write-Host "`n`n`n`n`n`n`n`n"  # Spacing
+Write-Host " " * 40 + "Initializing PATCH INSTALLER SEB..." -ForegroundColor Yellow
 Write-Host "`n"
 
-# ===== TITLE SECTION =====
-Write-Host ("=" * 90) -ForegroundColor Cyan
-Write-Host "                    PATCH INSTALLER SEB v3.10.0.826" -ForegroundColor Cyan
-Write-Host "                        Safe • Silent • Stable" -ForegroundColor Cyan
-Write-Host "                        Powered by ArvinPrdn" -ForegroundColor Cyan
-Write-Host ("=" * 90) -ForegroundColor Cyan
+# Loading animation
+$spinner = @('|', '/', '-', '\')
+for ($i = 0; $i -lt 12; $i++) {
+    $frame = $spinner[$i % 4]
+    Write-Host "`r" + (" " * 45) + "[$frame] Loading..." -NoNewline -ForegroundColor Cyan
+    Start-Sleep -Milliseconds 100
+}
+
+# Clear loading animation
+Write-Host "`r" + (" " * 60) -NoNewline
+Write-Host "`r" -NoNewline
+
+Clear-Host
+
+# ===== DISPLAY ASCII LOGOS WITH ANIMATION =====
+Write-Host "`n`n"  # Top spacing
+
+# Show first logo with line-by-line animation
+Show-AnimatedLogo -Logo $AsciiLogo1 -Color "Magenta" -DelayPerLine 20
+
+# Small pause between logos
+Start-Sleep -Milliseconds 300
+
+# Show second logo with line-by-line animation
+Show-AnimatedLogo -Logo $AsciiLogo2 -Color "Cyan" -DelayPerLine 10
+
 Write-Host "`n"
+
+# ===== TITLE SECTION WITH ANIMATION =====
+$titleLines = @(
+    "=" * 90,
+    "                    PATCH INSTALLER SEB v3.10.0.826",
+    "                        Safe • Silent • Stable",
+    "                        Powered by ArvinPrdn",
+    "=" * 90
+)
+
+foreach ($line in $titleLines) {
+    Write-Host $line -ForegroundColor Cyan
+    Start-Sleep -Milliseconds 50
+}
+
+Write-Host "`n`n"
 
 # ===== CHECK ADMIN PRIVILEGES =====
+Write-Host "[✓] Checking system permissions..." -ForegroundColor Yellow
+
+# Loading animation for admin check
+$adminSpinner = @('⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏')
+for ($i = 0; $i -lt 8; $i++) {
+    $frame = $adminSpinner[$i % 10]
+    Write-Host "`r    [$frame] Verifying privileges..." -NoNewline -ForegroundColor Gray
+    Start-Sleep -Milliseconds 80
+}
+
 $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+
+Write-Host "`r    " + (" " * 40) -NoNewline
+Write-Host "`r" -NoNewline
 
 if ($isAdmin) {
     Write-Host "[✓] Running with administrator privileges" -ForegroundColor Green
@@ -115,12 +183,14 @@ if ($isAdmin) {
     Write-Host "[⚠] Running without administrator privileges" -ForegroundColor Yellow
     Write-Host "    (Some features may require admin rights)" -ForegroundColor Yellow
 }
-Write-Host "`n"
+
+# Status bar for readiness
+Write-Host "`n" + ("─" * 90) -ForegroundColor DarkGray
+Write-Host "    [■■■■■■■■■■■■■■■■■■■■] System ready for installation" -ForegroundColor Green
+Write-Host ("─" * 90) -ForegroundColor DarkGray
+Write-Host "`n`n"
 
 # ===== DOWNLOAD CONFIGURATION =====
-$Url = "https://github.com/ArvinPrdn/PATCH-INSTALLER-SEB-v3.10.0.826/releases/download/v3.10.0.826/patch-seb.1.exe"
-$Out = "$env:TEMP\patch-seb.exe"
-
 Write-Host "[1] Downloading Patch SEB..." -ForegroundColor Yellow
 
 # ===== ANIMATED DOWNLOAD MESSAGE =====
@@ -134,11 +204,16 @@ try {
         Remove-Item $Out -Force -ErrorAction SilentlyContinue
     }
     
-    # Animasi loading sederhana
-    $dots = @('.   ', '..  ', '... ', '....')
+    # Animasi loading yang lebih menarik
+    $downloadFrames = @('▌', '▀', '▐', '▄')
     $counter = 0
+    $downloadSpeed = 0
+    $simulatedSize = 0
     
-    # Mulai download di background job
+    # Buat progress bar animation
+    Write-Host "`n   [                                              ] 0%" -NoNewline -ForegroundColor Gray
+    
+    # Simulasi progress bar selama download
     $job = Start-Job -ScriptBlock {
         param($Url, $Out)
         $ProgressPreference = 'SilentlyContinue'
@@ -154,50 +229,69 @@ try {
         }
     } -ArgumentList $Url, $Out
     
-    # Tampilkan animasi saat download
+    # Animated progress bar
     while ($job.State -eq 'Running') {
         $counter = ($counter + 1) % 4
-        Write-Host "`r   Downloading$($dots[$counter])" -NoNewline -ForegroundColor Gray
-        Start-Sleep -Milliseconds 300
+        $frame = $downloadFrames[$counter]
+        $simulatedSize = [Math]::Min($simulatedSize + 0.5, 98)
+        
+        # Update progress bar
+        $progressBars = [Math]::Floor($simulatedSize / 2)
+        $progressBar = "[" + ("█" * $progressBars) + (" " * (50 - $progressBars)) + "]"
+        
+        Write-Host "`r   $progressBar $([Math]::Floor($simulatedSize))% $frame" -NoNewline -ForegroundColor Cyan
+        Start-Sleep -Milliseconds 150
     }
     
     # Dapatkan hasil
     $result = Receive-Job $job
     Remove-Job $job -Force
     
-    # Hapus animasi
-    Write-Host "`r" + (" " * 50) -NoNewline
-    Write-Host "`r" -NoNewline
+    # Set progress to 100%
+    Write-Host "`r   [" + ("█" * 50) + "] 100% ✓" -ForegroundColor Green
     
     # Periksa hasil download
     if ($result -and (Test-Path $Out)) {
         $fileSize = (Get-Item $Out).Length / 1MB
-        Write-Host "[✓] Download completed successfully" -ForegroundColor Green
-        Write-Host "    File size: $($fileSize.ToString('0.00')) MB" -ForegroundColor Gray
+        Write-Host "`n   [✓] Download completed successfully" -ForegroundColor Green
+        Write-Host "       File size: $($fileSize.ToString('0.00')) MB" -ForegroundColor Gray
     } else {
-        Write-Host "[❌] ERROR: Download failed or file not found" -ForegroundColor Red
+        Write-Host "`n   [❌] ERROR: Download failed or file not found" -ForegroundColor Red
         exit 1
     }
     
 } catch {
-    Write-Host "`r[❌] ERROR: Download failed!" -ForegroundColor Red
-    Write-Host "    Error: $($_.Exception.Message)" -ForegroundColor DarkGray
-    Write-Host "`n    Possible solutions:" -ForegroundColor Yellow
-    Write-Host "    1. Check internet connection" -ForegroundColor White
-    Write-Host "    2. Try running as administrator" -ForegroundColor White
-    Write-Host "    3. Disable antivirus temporarily" -ForegroundColor White
+    Write-Host "`n   [❌] ERROR: Download failed!" -ForegroundColor Red
+    Write-Host "       Error: $($_.Exception.Message)" -ForegroundColor DarkGray
+    Write-Host "`n       Possible solutions:" -ForegroundColor Yellow
+    Write-Host "       1. Check internet connection" -ForegroundColor White
+    Write-Host "       2. Try running as administrator" -ForegroundColor White
+    Write-Host "       3. Disable antivirus temporarily" -ForegroundColor White
     exit 1
 }
 
 Write-Host "`n"
 
-# ===== VERIFY FILE =====
+# ===== CONTINUE WITH THE REST OF THE SCRIPT... =====
+# ... [sisanya sama seperti sebelumnya, mulai dari VERIFY FILE]
+
 Write-Host "[2] Verifying downloaded file..." -ForegroundColor Yellow
 
+# ===== VERIFY FILE =====
 if (!(Test-Path $Out)) {
     Write-Host "[❌] ERROR: File not found" -ForegroundColor Red
     exit 1
 }
+
+# Animated verification
+$verifyFrames = @('🔍', '📁', '✅', '🔒')
+for ($i = 0; $i < 6; $i++) {
+    $frame = $verifyFrames[$i % 4]
+    Write-Host "`r    [$frame] Verifying file..." -NoNewline -ForegroundColor Gray
+    Start-Sleep -Milliseconds 150
+}
+Write-Host "`r    " + (" " * 40) -NoNewline
+Write-Host "`r" -NoNewline
 
 # Cek signature file (jika ada)
 try {
@@ -233,15 +327,16 @@ try {
     # Tampilkan instruksi
     Write-Host "`n   [INFO] Installer will now open with graphical interface" -ForegroundColor Cyan
     Write-Host "   Please follow the installation wizard manually" -ForegroundColor Cyan
-    Write-Host "`n   Opening installer in 3 seconds..." -ForegroundColor Yellow
     
-    # Countdown
+    # Countdown dengan animasi
+    Write-Host "`n   Opening installer in: " -NoNewline -ForegroundColor Yellow
     for ($i = 3; $i -gt 0; $i--) {
-        Write-Host "   $i..." -ForegroundColor Yellow
+        Write-Host "$i " -NoNewline -ForegroundColor Yellow
         Start-Sleep -Seconds 1
     }
+    Write-Host "GO!" -ForegroundColor Green
     
-    # Jalankan installer dengan GUI normal (TANPA silent mode)
+    # Jalankan installer dengan GUI normal
     Write-Host "`n   [▶] Launching installer..." -ForegroundColor Green
     
     # Method 1: Gunakan Start-Process tanpa argumen silent
@@ -342,9 +437,21 @@ try {
     Write-Host "   You can manually delete: $Out" -ForegroundColor Gray
 }
 
-# ===== FINAL MESSAGE =====
+# ===== FINAL MESSAGE WITH ANIMATION =====
 Write-Host "`n" + ("=" * 90) -ForegroundColor Cyan
-Write-Host "                          INSTALLATION COMPLETED                          " -ForegroundColor Green
+
+# Animate final message
+$finalMessage = "                          INSTALLATION COMPLETED                          "
+$colors = @("Green", "Cyan", "Green")
+for ($i = 0; $i -lt 3; $i++) {
+    Write-Host $finalMessage -ForegroundColor $colors[$i]
+    if ($i -lt 2) {
+        Write-Host "`r" + (" " * 90) -NoNewline
+        Write-Host "`r" -NoNewline
+        Start-Sleep -Milliseconds 200
+    }
+}
+
 Write-Host ("=" * 90) -ForegroundColor Cyan
 Write-Host "`n"
 
@@ -377,7 +484,13 @@ if ($Host.Name -like "*ISE*") {
 } else {
     # Jika di PowerShell Console, tunggu 5 detik
     Write-Host "Auto-closing in 5 seconds..." -ForegroundColor Gray
-    Start-Sleep -Seconds 5
+    # Countdown
+    for ($i = 5; $i -gt 0; $i--) {
+        Write-Host "  $i..." -NoNewline -ForegroundColor DarkGray
+        Start-Sleep -Seconds 1
+    }
+    Write-Host "`r" + (" " * 10) -NoNewline
+    Write-Host "`r" -NoNewline
 }
 
 exit 0
