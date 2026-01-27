@@ -285,7 +285,6 @@ if (!(Test-Path $Out)) {
     Write-Host "[❌] ERROR: File not found" -ForegroundColor Red
     exit 1
 }
-
 # Animated verification - PERBAIKAN: ganti for loop dengan -lt
 $verifyFrames = @(' ', ' ', ' ', ' ')
 for ($i = 0; $i -lt 6; $i++) {
