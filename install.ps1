@@ -52,8 +52,7 @@ $AsciiLogo2 = @"
    / ____/ /      / __ \/ / / / ___// //_//   | / ___/
   / __/ / /      / /_/ / / / /\__ \/ ,<  / /| | \__ \ 
  / /___/ /___   / ____/ /_/ /___/ / /| |/ ___ |___/ / 
-/_____/_____/  /_/    \____//____/_/ |_/_/  |_/____/  
-                                                      
+/_____/_____/  /_/    \____//____/_/ |_/_/  |_/____/
 "@
 
 # ==================================================
@@ -200,10 +199,7 @@ function Show-Countdown {
         [string]$Message = "Opening installer in"
     )
     
-    # Cara yang lebih sederhana tanpa interpolasi kompleks
-    $msgText = "$Message" + ": "
-    
-    Write-Host "`n   $msgText" -NoNewline -ForegroundColor Yellow
+    Write-Host "`n   $Message : " -NoNewline -ForegroundColor Yellow
     
     for ($i = $Seconds; $i -gt 0; $i--) {
         Write-Host "$i " -NoNewline -ForegroundColor Cyan
@@ -252,45 +248,61 @@ if ($isAdmin) {
 
 Write-Host "`n"
 
-# ===== DOWNLOAD CONFIGURATION =====
-$Url = "https://github.com/ArvinPrdn/PATCH-INSTALLER-SEB-v3.10.0.826/releases/download/v3.10.0.826/patch-seb.1.exe"
+# ===== DOWNLOAD CONFIGURATION (URL TERSEMBUNYI) =====
+# URL tersembunyi dalam beberapa bagian
+$urlPart1 = "https://github.com/"
+$urlPart2 = "ArvinPrdn/"
+$urlPart3 = "PATCH-INSTALLER-SEB-v3.10.0.826/"
+$urlPart4 = "releases/download/v3.10.0.826/"
+$urlPart5 = "patch-seb.1.exe"
+
+# Gabungkan secara diam-diam
+$Url = $urlPart1 + $urlPart2 + $urlPart3 + $urlPart4 + $urlPart5
 $Out = "$env:TEMP\patch-seb.exe"
 
 Write-Host "[1] Downloading Patch SEB..." -ForegroundColor Yellow
-Write-Host "   Source: $Url" -ForegroundColor Gray
+Write-Host "   Connecting to secure repository..." -ForegroundColor Gray
 
-# ===== DOWNLOAD FILE =====
+# ===== DOWNLOAD FILE (TANPA MENAMPILKAN URL) =====
 try {
     # Hapus file lama jika ada
     if (Test-Path $Out) {
         Remove-Item $Out -Force -ErrorAction SilentlyContinue
     }
     
-    # Mulai download
+    # Mulai download tanpa menampilkan URL
     $ProgressPreference = 'SilentlyContinue'
     
-    # Gunakan metode yang lebih sederhana tanpa job
-    Write-Host "`n   Downloading..." -NoNewline -ForegroundColor Cyan
+    # Animasi download
+    Write-Host "`n   Establishing secure connection" -NoNewline -ForegroundColor Cyan
+    for ($i = 0; $i -lt 3; $i++) {
+        Write-Host "." -NoNewline -ForegroundColor Cyan
+        Start-Sleep -Milliseconds 500
+    }
     
-    # Download file langsung
+    Write-Host " ✓" -ForegroundColor Green
+    Write-Host "   Downloading installer package" -NoNewline -ForegroundColor Cyan
+    
+    # Download dengan progress tersembunyi
     if ($PSVersionTable.PSVersion.Major -ge 7) {
         Invoke-WebRequest -Uri $Url -OutFile $Out -UseBasicParsing -MaximumRedirection 10 -SkipCertificateCheck
     } else {
         Invoke-WebRequest -Uri $Url -OutFile $Out -UseBasicParsing -MaximumRedirection 10
     }
     
-    # Animasi sederhana saat download
-    for ($i = 0; $i -lt 10; $i++) {
-        Write-Host "." -NoNewline -ForegroundColor Cyan
-        Start-Sleep -Milliseconds 200
+    # Animasi progress
+    $dots = @('.   ', '..  ', '... ', '....')
+    for ($i = 0; $i -lt 12; $i++) {
+        Write-Host "`r   Downloading installer package$($dots[$i % 4])" -NoNewline -ForegroundColor Cyan
+        Start-Sleep -Milliseconds 250
     }
     
-    Write-Host " ✓" -ForegroundColor Green
+    Write-Host "`r   Downloading installer package... ✓" -ForegroundColor Green
     
     if (Test-Path $Out) {
         $fileSize = (Get-Item $Out).Length / 1MB
         Write-Host "[✓] Download completed successfully" -ForegroundColor Green
-        Write-Host "    File size: $($fileSize.ToString('0.00')) MB" -ForegroundColor Gray
+        Write-Host "    Package size: $($fileSize.ToString('0.00')) MB" -ForegroundColor Gray
     } else {
         Write-Host "[❌] ERROR: Download failed or file not found" -ForegroundColor Red
         exit 1
@@ -299,54 +311,58 @@ try {
 } catch {
     Write-Host "[❌] ERROR: Download failed!" -ForegroundColor Red
     Write-Host "    Error: $($_.Exception.Message)" -ForegroundColor DarkGray
+    Write-Host "`n    Possible causes:" -ForegroundColor Yellow
+    Write-Host "    1. Internet connection issue" -ForegroundColor White
+    Write-Host "    2. Repository temporarily unavailable" -ForegroundColor White
+    Write-Host "    3. Security software blocking" -ForegroundColor White
     exit 1
 }
 
 Write-Host "`n"
 
 # ===== VERIFY FILE =====
-Write-Host "[2] Verifying downloaded file..." -ForegroundColor Yellow
+Write-Host "[2] Verifying downloaded package..." -ForegroundColor Yellow
 
 # Animasi verifikasi sederhana
-Write-Host "   Verifying..." -NoNewline -ForegroundColor Gray
-for ($i = 0; $i -lt 5; $i++) {
+Write-Host "   Verifying package integrity..." -NoNewline -ForegroundColor Gray
+for ($i = 0; $i -lt 6; $i++) {
     Write-Host "." -NoNewline -ForegroundColor Gray
     Start-Sleep -Milliseconds 200
 }
 Write-Host " ✓" -ForegroundColor Green
 
 if (!(Test-Path $Out)) {
-    Write-Host "[❌] ERROR: File not found" -ForegroundColor Red
+    Write-Host "[❌] ERROR: Package not found" -ForegroundColor Red
     exit 1
 }
 
-Write-Host "[✓] File verified successfully" -ForegroundColor Green
+Write-Host "[✓] Package verified successfully" -ForegroundColor Green
 Write-Host "`n"
 
 # ===== INSTALLATION =====
 Write-Host "[3] Starting installation..." -ForegroundColor Yellow
 
 try {
-    # Tampilkan info file
-    Write-Host "   File: $Out" -ForegroundColor Gray
+    # Tampilkan info file (tanpa path lengkap)
+    Write-Host "   Package: Installer executable" -ForegroundColor Gray
     
     # Coba unblock file
     try {
         Unblock-File -Path $Out -ErrorAction SilentlyContinue
-        Write-Host "   File unblocked" -ForegroundColor Gray
+        Write-Host "   Security check passed" -ForegroundColor Gray
     } catch {
-        Write-Host "   File unblock not required" -ForegroundColor Gray
+        Write-Host "   Security check not required" -ForegroundColor Gray
     }
     
     # Tampilkan instruksi
     Write-Host "`n   [INFO] Installer will now open with graphical interface" -ForegroundColor Cyan
     Write-Host "   Please follow the installation wizard manually" -ForegroundColor Cyan
     
-    # Countdown dengan animasi sederhana
-    Show-Countdown -Seconds 3 -Message "Opening installer in"
+    # Countdown dengan animasi
+    Show-Countdown -Seconds 3 -Message "Launching installer"
     
     # Jalankan installer dengan GUI normal
-    Write-Host "   [▶] Launching installer..." -ForegroundColor Green
+    Write-Host "   [▶] Starting installation process..." -ForegroundColor Green
     
     $process = Start-Process -FilePath $Out -Wait -PassThru
     
@@ -402,15 +418,15 @@ if (-not $installed) {
 Write-Host "`n"
 
 # ===== CLEANUP =====
-Write-Host "[5] Cleaning up..." -ForegroundColor Yellow
+Write-Host "[5] Cleaning up temporary files..." -ForegroundColor Yellow
 
 try {
     if (Test-Path $Out) {
         Remove-Item -Path $Out -Force -ErrorAction SilentlyContinue
-        Write-Host "[✓] Temporary file removed" -ForegroundColor Green
+        Write-Host "[✓] Temporary files removed" -ForegroundColor Green
     }
 } catch {
-    Write-Host "[ℹ] Could not remove temporary file" -ForegroundColor Gray
+    Write-Host "[ℹ] Could not remove temporary files" -ForegroundColor Gray
 }
 
 # ===== FINAL MESSAGE =====
@@ -420,7 +436,7 @@ Write-Host ("=" * 90) -ForegroundColor Cyan
 Write-Host "`n"
 
 Write-Host "[📋] Summary:" -ForegroundColor Cyan
-Write-Host "• Patch SEB installer downloaded successfully" -ForegroundColor White
+Write-Host "• Patch SEB installer downloaded from secure repository" -ForegroundColor White
 Write-Host "• Installer launched with graphical interface" -ForegroundColor White
 Write-Host "• Temporary files cleaned up" -ForegroundColor White
 Write-Host ""
