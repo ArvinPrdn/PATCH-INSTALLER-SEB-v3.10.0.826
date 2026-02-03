@@ -1,4 +1,4 @@
-    # ==================================================
+# ==================================================
 # SEB INSTALLER - ENHANCED VERSION
 # With User Info Display & Animations
 # ==================================================
@@ -18,7 +18,7 @@ function Show-AsciiArt {
  / /___/ /___   / ____/ /_/ /___/ / /| |/ ___ |___/ / 
 /_____/_____/  /_/    \____//____/_/ |_/_/  |_/____/
 "@ -split "`n"
-    
+     
     foreach ($line in $asciiLines) {
         Write-Host $line -ForegroundColor Red
         Start-Sleep -Milliseconds $Speed
@@ -112,7 +112,7 @@ function Test-LicenseFormat {
     $confusingChars = @('I','O','S','1','0','5','8','B')
     foreach ($char in $confusingChars) {
         if ($LicenseKey.Contains($char)) {
-            Write-Host "   [Note] Contains potentially confusing character: $char" -ForegroundColor Yellow
+            Write-Host "   [Note] Contains potentially confusing character: $char" -ForegroundColor Red
         }
     }
     
@@ -169,9 +169,9 @@ function Save-License {
 function Display-LicenseInfo {
     param([string]$LicenseKey)
     
-    Write-Host "`n" + ("─" * 60) -ForegroundColor Red
+    Write-Host "`n" + ("-" * 60) -ForegroundColor Red
     Write-Host "                LICENSE INFORMATION" -ForegroundColor Red
-    Write-Host ("─" * 60) -ForegroundColor Red
+    Write-Host ("-" * 60) -ForegroundColor Red
     
     $formattedKey = $LicenseKey.Insert(4, " ").Insert(9, " ").Insert(14, " ")
     
@@ -195,7 +195,7 @@ function Display-LicenseInfo {
     Write-Host "   • Do not share your license key" -ForegroundColor Red
     Write-Host "   • Contact support for license transfers" -ForegroundColor Red
 
-    Write-Host "`n" + ("─" * 60) -ForegroundColor Red
+    Write-Host "`n" + ("-" * 60) -ForegroundColor Red
 }
 
 # ===== MAIN INSTALLER =====
@@ -247,15 +247,7 @@ try {
     Write-Host "   Size: Approximately 50-100 MB" -ForegroundColor Red
     Write-Host "   Estimated time: 1-5 minutes (depending on connection)" -ForegroundColor Red
 
-    Write-Host "`n   " -NoNewline
-    $continue = Read-Host "Start download now? (Y/N)"
-
-    if ($continue -notin @('Y','y','Yes','yes')) {
-        Write-Host "`n   ⚠️  Download cancelled by user" -ForegroundColor Red
-        Write-Host "   Your license has been saved. You can run installer again later." -ForegroundColor Red
-        Read-Host "`n   Press Enter to exit"
-        exit 0
-    }
+    Write-Host "`n   Starting download automatically..." -ForegroundColor Red
     
     Write-Host "`n"
     Show-ProgressAnimation -Message "Initializing download connection" -Dots 3
@@ -272,24 +264,24 @@ try {
         $timestamp = Get-Date -Format "yyyyMMddHHmmss"
         $tempFile = "$env:TEMP\seb-installer-$timestamp.exe"
         
-        Write-Host "`n   📥 Downloading from secure server..." -ForegroundColor Yellow
-        
+        Write-Host "`n   📥 Downloading from secure server..." -ForegroundColor Red
+
         # Download with progress indicator
         $webClient = New-Object System.Net.WebClient
         $webClient.DownloadFile($githubUrl, $tempFile)
-        
+
         if (Test-Path $tempFile) {
             $fileSize = [math]::Round((Get-Item $tempFile).Length / 1MB, 2)
-            Write-Host "   ✅ Download complete: $fileSize MB" -ForegroundColor Green
-            
+            Write-Host "   ✅ Download complete: $fileSize MB" -ForegroundColor Red
+
             # Step 3: Installation
-            Write-Host "`n" + ("═" * 60) -ForegroundColor Yellow
-            Write-Host "              STEP 3: INSTALLATION" -ForegroundColor Yellow
-            Write-Host ("═" * 60) -ForegroundColor Yellow
-            
-            Write-Host "`n   🚀 Installing SEB Software..." -ForegroundColor White
-            Write-Host "   Please wait, this may take a few minutes." -ForegroundColor Gray
-            Write-Host "   Do not close this window during installation." -ForegroundColor Gray
+            Write-Host "`n" + ("═" * 60) -ForegroundColor Red
+            Write-Host "              STEP 3: INSTALLATION" -ForegroundColor Red
+            Write-Host ("═" * 60) -ForegroundColor Red
+
+            Write-Host "`n   🚀 Installing SEB Software..." -ForegroundColor Red
+            Write-Host "   Please wait, this may take a few minutes." -ForegroundColor Red
+            Write-Host "   Do not close this window during installation." -ForegroundColor Red
             
             Write-Host "`n"
             Show-ProgressAnimation -Message "Running installer" -Dots 4
