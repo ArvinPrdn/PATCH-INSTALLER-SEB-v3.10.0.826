@@ -12,21 +12,15 @@ function Show-AsciiArt {
     param([int]$Speed = 50)
     
     $asciiLines = @"
-    
-    ╔══════════════════════════════════════════════╗
-    ║                                              ║
-    ║          ░█▀▀░█░░░█░█░█▀▀░▀█▀░█▀█░█▀▄        ║
-    ║          ░▀▀█░█░░░█░█░█░░░░█░░█░█░█░█        ║
-    ║          ░▀▀▀░▀▀▀░▀▀▀░▀▀▀░░▀░░▀▀▀░▀▀░        ║
-    ║                                              ║
-    ║         S O F T W A R E   S Y S T E M        ║
-    ║          Version 3.10.0.826 • Professional   ║
-    ║                                              ║
-    ╚══════════════════════════════════════════════╝
+    ________       ____  __  _______ __ __ ___   _____
+   / ____/ /      / __ \/ / / / ___// //_//   | / ___/
+  / __/ / /      / /_/ / / / /\__ \/ ,<  / /| | \__ \ 
+ / /___/ /___   / ____/ /_/ /___/ / /| |/ ___ |___/ / 
+/_____/_____/  /_/    \____//____/_/ |_/_/  |_/____/
 "@ -split "`n"
     
     foreach ($line in $asciiLines) {
-        Write-Host $line -ForegroundColor Cyan
+        Write-Host $line -ForegroundColor Red
         Start-Sleep -Milliseconds $Speed
     }
 }
@@ -34,12 +28,12 @@ function Show-AsciiArt {
 function Show-ProgressAnimation {
     param([string]$Message, [int]$Dots = 3)
     
-    Write-Host "`n   $message " -NoNewline -ForegroundColor Yellow
+    Write-Host "`n   $message " -NoNewline -ForegroundColor Red
     for ($i = 0; $i -lt $Dots; $i++) {
-        Write-Host "." -NoNewline -ForegroundColor Cyan
+        Write-Host "." -NoNewline -ForegroundColor Red
         Start-Sleep -Milliseconds 300
     }
-    Write-Host " DONE" -ForegroundColor Green
+    Write-Host " DONE" -ForegroundColor Red
 }
 
 function Show-Spinner {
@@ -50,18 +44,18 @@ function Show-Spinner {
     
     while ((Get-Date) -lt $endTime) {
         foreach ($char in $spinner) {
-            Write-Host "`r   Processing $char" -NoNewline -ForegroundColor Cyan
+            Write-Host "`r   Processing $char" -NoNewline -ForegroundColor Red
             Start-Sleep -Milliseconds 100
         }
     }
-    Write-Host "`r   Processing ✓" -ForegroundColor Green
+    Write-Host "`r   Processing ✓" -ForegroundColor Red
 }
 
 # ===== DISPLAY USER SYSTEM INFO =====
 function Show-SystemInfo {
-    Write-Host "`n" + ("═" * 60) -ForegroundColor DarkCyan
-    Write-Host "              SYSTEM INFORMATION" -ForegroundColor Cyan
-    Write-Host ("═" * 60) -ForegroundColor DarkCyan
+    Write-Host "`n" + ("═" * 60) -ForegroundColor Red
+    Write-Host "              SYSTEM INFORMATION" -ForegroundColor Red
+    Write-Host ("═" * 60) -ForegroundColor Red
     
     try {
         $computerInfo = Get-ComputerInfo -ErrorAction SilentlyContinue
@@ -69,38 +63,38 @@ function Show-SystemInfo {
         $cpu = Get-CimInstance Win32_Processor
         $ram = Get-CimInstance Win32_ComputerSystem
         
-        Write-Host "`n   🖥️  COMPUTER DETAILS:" -ForegroundColor Yellow
-        Write-Host "   • Computer Name : $env:COMPUTERNAME" -ForegroundColor White
-        Write-Host "   • Windows User  : $env:USERNAME" -ForegroundColor White
-        Write-Host "   • Domain/Workgroup : $($env:USERDOMAIN)" -ForegroundColor White
-        
-        Write-Host "`n   📀 OPERATING SYSTEM:" -ForegroundColor Yellow
-        Write-Host "   • OS Version    : $($os.Caption)" -ForegroundColor White
-        Write-Host "   • Build Number  : $($os.BuildNumber)" -ForegroundColor White
-        Write-Host "   • Architecture  : $($os.OSArchitecture)" -ForegroundColor White
-        
-        Write-Host "`n   ⚙️  HARDWARE INFO:" -ForegroundColor Yellow
-        Write-Host "   • Processor     : $($cpu.Name)" -ForegroundColor White
-        Write-Host "   • RAM Installed : $([math]::Round($ram.TotalPhysicalMemory/1GB, 2)) GB" -ForegroundColor White
-        Write-Host "   • System Type   : $($ram.SystemType)" -ForegroundColor White
-        
-        Write-Host "`n   📂 DISK SPACE:" -ForegroundColor Yellow
+        Write-Host "`n   🖥️  COMPUTER DETAILS:" -ForegroundColor Red
+        Write-Host "   • Computer Name : $env:COMPUTERNAME" -ForegroundColor Red
+        Write-Host "   • Windows User  : $env:USERNAME" -ForegroundColor Red
+        Write-Host "   • Domain/Workgroup : $($env:USERDOMAIN)" -ForegroundColor Red
+
+        Write-Host "`n   📀 OPERATING SYSTEM:" -ForegroundColor Red
+        Write-Host "   • OS Version    : $($os.Caption)" -ForegroundColor Red
+        Write-Host "   • Build Number  : $($os.BuildNumber)" -ForegroundColor Red
+        Write-Host "   • Architecture  : $($os.OSArchitecture)" -ForegroundColor Red
+
+        Write-Host "`n   ⚙️  HARDWARE INFO:" -ForegroundColor Red
+        Write-Host "   • Processor     : $($cpu.Name)" -ForegroundColor Red
+        Write-Host "   • RAM Installed : $([math]::Round($ram.TotalPhysicalMemory/1GB, 2)) GB" -ForegroundColor Red
+        Write-Host "   • System Type   : $($ram.SystemType)" -ForegroundColor Red
+
+        Write-Host "`n   📂 DISK SPACE:" -ForegroundColor Red
         $disks = Get-PSDrive -PSProvider FileSystem | Where-Object {$_.Used -gt 0}
         foreach ($disk in $disks) {
             $freeGB = [math]::Round($disk.Free/1GB, 2)
             $totalGB = [math]::Round(($disk.Used + $disk.Free)/1GB, 2)
             $percentFree = [math]::Round(($disk.Free/($disk.Used + $disk.Free)) * 100, 1)
-            Write-Host "   • Drive $($disk.Name): $freeGB GB free of $totalGB GB ($percentFree%)" -ForegroundColor White
+            Write-Host "   • Drive $($disk.Name): $freeGB GB free of $totalGB GB ($percentFree%)" -ForegroundColor Red
         }
         
     } catch {
-        Write-Host "   [INFO] Showing basic system info..." -ForegroundColor Yellow
-        Write-Host "   • Computer: $env:COMPUTERNAME" -ForegroundColor White
-        Write-Host "   • User: $env:USERNAME" -ForegroundColor White
-        Write-Host "   • OS: Windows" -ForegroundColor White
+        Write-Host "   [INFO] Showing basic system info..." -ForegroundColor Red
+        Write-Host "   • Computer: $env:COMPUTERNAME" -ForegroundColor Red
+        Write-Host "   • User: $env:USERNAME" -ForegroundColor Red
+        Write-Host "   • OS: Windows" -ForegroundColor Red
     }
-    
-    Write-Host "`n" + ("═" * 60) -ForegroundColor DarkCyan
+
+    Write-Host "`n" + ("═" * 60) -ForegroundColor Red
 }
 
 # ===== LICENSE VALIDATION FUNCTIONS =====
@@ -175,33 +169,33 @@ function Save-License {
 function Display-LicenseInfo {
     param([string]$LicenseKey)
     
-    Write-Host "`n" + ("─" * 60) -ForegroundColor Magenta
-    Write-Host "                LICENSE INFORMATION" -ForegroundColor Magenta
-    Write-Host ("─" * 60) -ForegroundColor Magenta
+    Write-Host "`n" + ("─" * 60) -ForegroundColor Red
+    Write-Host "                LICENSE INFORMATION" -ForegroundColor Red
+    Write-Host ("─" * 60) -ForegroundColor Red
     
     $formattedKey = $LicenseKey.Insert(4, " ").Insert(9, " ").Insert(14, " ")
     
-    Write-Host "`n   🔑 LICENSE KEY:" -ForegroundColor Yellow
+    Write-Host "`n   🔑 LICENSE KEY:" -ForegroundColor Red
     Write-Host "   "
-    Write-Host "     ████████████████████████████████████" -ForegroundColor DarkGray
-    Write-Host "     ██                                ██" -ForegroundColor DarkGray
-    Write-Host "     ██    $formattedKey    ██" -ForegroundColor Cyan
-    Write-Host "     ██                                ██" -ForegroundColor DarkGray
-    Write-Host "     ████████████████████████████████████" -ForegroundColor DarkGray
-    
-    Write-Host "`n   📋 ACTIVATION DETAILS:" -ForegroundColor Yellow
-    Write-Host "   • Computer    : $env:COMPUTERNAME" -ForegroundColor White
-    Write-Host "   • User        : $env:USERNAME" -ForegroundColor White
-    Write-Host "   • Date        : $(Get-Date -Format 'dddd, MMMM dd, yyyy')" -ForegroundColor White
-    Write-Host "   • Time        : $(Get-Date -Format 'HH:mm:ss')" -ForegroundColor White
-    Write-Host "   • Valid Until : $(Get-Date).AddYears(1).ToString('yyyy-MM-dd')" -ForegroundColor Green
-    
-    Write-Host "`n   ⚠️  IMPORTANT NOTES:" -ForegroundColor Yellow
-    Write-Host "   • This license is locked to this computer" -ForegroundColor White
-    Write-Host "   • Do not share your license key" -ForegroundColor White
-    Write-Host "   • Contact support for license transfers" -ForegroundColor White
-    
-    Write-Host "`n" + ("─" * 60) -ForegroundColor Magenta
+    Write-Host "     ████████████████████████████████████" -ForegroundColor Red
+    Write-Host "     ██                                ██" -ForegroundColor Red
+    Write-Host "     ██    $formattedKey    ██" -ForegroundColor Red
+    Write-Host "     ██                                ██" -ForegroundColor Red
+    Write-Host "     ████████████████████████████████████" -ForegroundColor Red
+
+    Write-Host "`n   📋 ACTIVATION DETAILS:" -ForegroundColor Red
+    Write-Host "   • Computer    : $env:COMPUTERNAME" -ForegroundColor Red
+    Write-Host "   • User        : $env:USERNAME" -ForegroundColor Red
+    Write-Host "   • Date        : $(Get-Date -Format 'dddd, MMMM dd, yyyy')" -ForegroundColor Red
+    Write-Host "   • Time        : $(Get-Date -Format 'HH:mm:ss')" -ForegroundColor Red
+    Write-Host "   • Valid Until : $(Get-Date).AddYears(1).ToString('yyyy-MM-dd')" -ForegroundColor Red
+
+    Write-Host "`n   ⚠️  IMPORTANT NOTES:" -ForegroundColor Red
+    Write-Host "   • This license is locked to this computer" -ForegroundColor Red
+    Write-Host "   • Do not share your license key" -ForegroundColor Red
+    Write-Host "   • Contact support for license transfers" -ForegroundColor Red
+
+    Write-Host "`n" + ("─" * 60) -ForegroundColor Red
 }
 
 # ===== MAIN INSTALLER =====
@@ -213,88 +207,88 @@ try {
     Show-SystemInfo
     
     # Step 1: Get License Key
-    Write-Host "`n" + ("═" * 60) -ForegroundColor Green
-    Write-Host "              STEP 1: LICENSE ACTIVATION" -ForegroundColor Green
-    Write-Host ("═" * 60) -ForegroundColor Green
-    
-    Write-Host "`n   Please enter your SEB Software license key." -ForegroundColor White
-    Write-Host "   Format: XXXX-XXXX-XXXX-XXXX (letters and numbers only)" -ForegroundColor Gray
-    
+    Write-Host "`n" + ("═" * 60) -ForegroundColor Red
+    Write-Host "              STEP 1: LICENSE ACTIVATION" -ForegroundColor Red
+    Write-Host ("═" * 60) -ForegroundColor Red
+
+    Write-Host "`n   Please enter your SEB Software license key." -ForegroundColor Red
+    Write-Host "   Format: XXXX-XXXX-XXXX-XXXX (letters and numbers only)" -ForegroundColor Red
+
     $licenseValid = $false
     $maxAttempts = 3
-    
+
     for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
-        Write-Host "`n   ──────────────────────────────────────" -ForegroundColor DarkGray
-        Write-Host "   Attempt $attempt of $maxAttempts" -ForegroundColor Gray
+        Write-Host "`n   ──────────────────────────────────────" -ForegroundColor Red
+        Write-Host "   Attempt $attempt of $maxAttempts" -ForegroundColor Red
         Write-Host "   " -NoNewline
         $inputKey = Read-Host "Enter License Key"
-        
+
         Show-Spinner -Seconds 1
-        
+
         $validation = Test-LicenseFormat -LicenseKey $inputKey
-        
+
         if ($validation.Valid) {
             $licenseValid = $true
             $licenseKey = $validation.LicenseKey
-            
+
             # Display license info
             Display-LicenseInfo -LicenseKey $licenseKey
-            
+
             # Confirm activation
             Write-Host "   " -NoNewline
             $confirm = Read-Host "Activate with this license? (Y/N)"
-            
+
             if ($confirm -in @('Y','y','Yes','yes')) {
                 Write-Host "`n"
                 Show-ProgressAnimation -Message "Activating license" -Dots 3
-                
+
                 $saveResult = Save-License -LicenseKey $licenseKey
-                
+
                 if ($saveResult.Success) {
-                    Write-Host "   ✅ $($saveResult.Message)" -ForegroundColor Green
-                    Write-Host "   📁 License saved to: $($saveResult.FilePath)" -ForegroundColor Gray
+                    Write-Host "   ✅ $($saveResult.Message)" -ForegroundColor Red
+                    Write-Host "   📁 License saved to: $($saveResult.FilePath)" -ForegroundColor Red
                     break
                 } else {
-                    Write-Host "   ⚠️  $($saveResult.Message)" -ForegroundColor Yellow
-                    Write-Host "   Continuing installation anyway..." -ForegroundColor Gray
+                    Write-Host "   ⚠️  $($saveResult.Message)" -ForegroundColor Red
+                    Write-Host "   Continuing installation anyway..." -ForegroundColor Red
                     break
                 }
             } else {
-                Write-Host "   ⚠️  Activation cancelled by user" -ForegroundColor Yellow
+                Write-Host "   ⚠️  Activation cancelled by user" -ForegroundColor Red
                 if ($attempt -lt $maxAttempts) {
-                    Write-Host "   Please enter a different license key" -ForegroundColor Gray
+                    Write-Host "   Please enter a different license key" -ForegroundColor Red
                 }
             }
         } else {
             Write-Host "   $($validation.Message)" -ForegroundColor Red
             if ($attempt -lt $maxAttempts) {
-                Write-Host "   Please try again" -ForegroundColor Yellow
+                Write-Host "   Please try again" -ForegroundColor Red
             }
         }
     }
     
     if (-not $licenseValid) {
         Write-Host "`n   ❌ Maximum attempts reached. Installation cannot continue." -ForegroundColor Red
-        Write-Host "   Please contact support for assistance." -ForegroundColor Yellow
+        Write-Host "   Please contact support for assistance." -ForegroundColor Red
         Read-Host "`n   Press Enter to exit"
         exit 1
     }
-    
+
     # Step 2: Download Software
-    Write-Host "`n" + ("═" * 60) -ForegroundColor Blue
-    Write-Host "              STEP 2: DOWNLOAD SOFTWARE" -ForegroundColor Blue
-    Write-Host ("═" * 60) -ForegroundColor Blue
-    
-    Write-Host "`n   Preparing to download SEB Software v3.10.0.826..." -ForegroundColor White
-    Write-Host "   Size: Approximately 50-100 MB" -ForegroundColor Gray
-    Write-Host "   Estimated time: 1-5 minutes (depending on connection)" -ForegroundColor Gray
-    
+    Write-Host "`n" + ("═" * 60) -ForegroundColor Red
+    Write-Host "              STEP 2: DOWNLOAD SOFTWARE" -ForegroundColor Red
+    Write-Host ("═" * 60) -ForegroundColor Red
+
+    Write-Host "`n   Preparing to download SEB Software v3.10.0.826..." -ForegroundColor Red
+    Write-Host "   Size: Approximately 50-100 MB" -ForegroundColor Red
+    Write-Host "   Estimated time: 1-5 minutes (depending on connection)" -ForegroundColor Red
+
     Write-Host "`n   " -NoNewline
     $continue = Read-Host "Start download now? (Y/N)"
-    
+
     if ($continue -notin @('Y','y','Yes','yes')) {
-        Write-Host "`n   ⚠️  Download cancelled by user" -ForegroundColor Yellow
-        Write-Host "   Your license has been saved. You can run installer again later." -ForegroundColor White
+        Write-Host "`n   ⚠️  Download cancelled by user" -ForegroundColor Red
+        Write-Host "   Your license has been saved. You can run installer again later." -ForegroundColor Red
         Read-Host "`n   Press Enter to exit"
         exit 0
     }
@@ -357,46 +351,46 @@ try {
         
     } catch {
         Write-Host "`n   ❌ ERROR: $($_.Exception.Message)" -ForegroundColor Red
-        Write-Host "   Please check your internet connection and try again." -ForegroundColor Yellow
-        Write-Host "   If problem persists, contact support." -ForegroundColor Yellow
+        Write-Host "   Please check your internet connection and try again." -ForegroundColor Red
+        Write-Host "   If problem persists, contact support." -ForegroundColor Red
         Read-Host "`n   Press Enter to exit"
         exit 1
     }
     
     # Final Success Message
-    Write-Host "`n" + ("═" * 60) -ForegroundColor Green
-    Write-Host ("╔" + ("═" * 58) + "╗") -ForegroundColor Green
-    Write-Host "║                  INSTALLATION COMPLETE!                  ║" -ForegroundColor Green
-    Write-Host ("╚" + ("═" * 58) + "╝") -ForegroundColor Green
-    
-    Write-Host "`n   🎉 CONGRATULATIONS!" -ForegroundColor Cyan
-    Write-Host "   SEB Software has been successfully installed and activated." -ForegroundColor White
-    
-    Write-Host "`n   📋 WHAT'S NEXT?" -ForegroundColor Yellow
-    Write-Host "   1. Find 'SEB' in your Start Menu" -ForegroundColor White
-    Write-Host "   2. Launch the application" -ForegroundColor White
-    Write-Host "   3. Your license is already activated - no further steps needed!" -ForegroundColor Green
-    
-    Write-Host "`n   🔧 SUPPORT INFORMATION:" -ForegroundColor Yellow
-    Write-Host "   • License Key: $licenseKey" -ForegroundColor White
-    Write-Host "   • Computer ID: $env:COMPUTERNAME" -ForegroundColor White
-    Write-Host "   • Support: support@seb-software.com" -ForegroundColor White
-    
-    Write-Host "`n   📅 Your software is valid until: $(Get-Date).AddYears(1).ToString('MMMM dd, yyyy')" -ForegroundColor Magenta
-    
+    Write-Host "`n" + ("═" * 60) -ForegroundColor Red
+    Write-Host ("╔" + ("═" * 58) + "╗") -ForegroundColor Red
+    Write-Host "║                  INSTALLATION COMPLETE!                  ║" -ForegroundColor Red
+    Write-Host ("╚" + ("═" * 58) + "╝") -ForegroundColor Red
+
+    Write-Host "`n   🎉 CONGRATULATIONS!" -ForegroundColor Red
+    Write-Host "   SEB Software has been successfully installed and activated." -ForegroundColor Red
+
+    Write-Host "`n   📋 WHAT'S NEXT?" -ForegroundColor Red
+    Write-Host "   1. Find 'SEB' in your Start Menu" -ForegroundColor Red
+    Write-Host "   2. Launch the application" -ForegroundColor Red
+    Write-Host "   3. Your license is already activated - no further steps needed!" -ForegroundColor Red
+
+    Write-Host "`n   🔧 SUPPORT INFORMATION:" -ForegroundColor Red
+    Write-Host "   • License Key: $licenseKey" -ForegroundColor Red
+    Write-Host "   • Computer ID: $env:COMPUTERNAME" -ForegroundColor Red
+    Write-Host "   • Support: support@seb-software.com" -ForegroundColor Red
+
+    Write-Host "`n   📅 Your software is valid until: $(Get-Date).AddYears(1).ToString('MMMM dd, yyyy')" -ForegroundColor Red
+
     # Countdown animation
-    Write-Host "`n   This window will close in " -NoNewline -ForegroundColor Gray
-    for ($i = 5; $i -ge 1; $i--) {
-        Write-Host "$i " -NoNewline -ForegroundColor Cyan
+    Write-Host "`n   This window will close in " -NoNewline -ForegroundColor Red
+    for ($i = 1; $i -ge 1; $i--) {
+        Write-Host "$i " -NoNewline -ForegroundColor Red
         Start-Sleep -Seconds 1
     }
-    Write-Host "`n`n   Thank you for choosing SEB Software!" -ForegroundColor Cyan
+    Write-Host "`n`n   Thank you for choosing SEB Software!" -ForegroundColor Red
     
 } catch {
     Write-Host "`n   ❌ UNEXPECTED ERROR: $($_.Exception.Message)" -ForegroundColor Red
-    Write-Host "   Please contact support with this error message." -ForegroundColor Yellow
-    Write-Host "   Error occurred at: $(Get-Date -Format 'HH:mm:ss')" -ForegroundColor Gray
+    Write-Host "   Please contact support with this error message." -ForegroundColor Red
+    Write-Host "   Error occurred at: $(Get-Date -Format 'HH:mm:ss')" -ForegroundColor Red
 }
 
 # Small pause before exit
-Start-Sleep -Seconds 2
+Start-Sleep -Seconds 0.5
