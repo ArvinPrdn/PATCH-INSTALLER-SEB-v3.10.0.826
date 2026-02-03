@@ -451,8 +451,8 @@ function Start-Installation {
     
     # STEP 1: LICENSE INPUT
     Write-Host "`n   📋 STEP 1: LICENSE ACTIVATION" -ForegroundColor Yellow
-    Write-Host "   " + ("─" * 50) -ForegroundColor DarkGray
-    
+    Write-Host "   " + ("-" * 50) -ForegroundColor DarkGray
+
     $licenseKey = Read-Host "   Masukkan License Key (XXXX-XXXX-XXXX-XXXX)"
     
     if ([string]::IsNullOrWhiteSpace($licenseKey)) {
@@ -478,8 +478,8 @@ function Start-Installation {
     
     # STEP 3: PREPARE DOWNLOAD
     Write-Host "`n   📥 STEP 2: SECURE DOWNLOAD" -ForegroundColor Yellow
-    Write-Host "   " + ("─" * 50) -ForegroundColor DarkGray
-    
+    Write-Host "   " + ("-" * 50) -ForegroundColor DarkGray
+
     Write-Host "   Menyiapkan koneksi aman..." -ForegroundColor Cyan
     Show-Spinner -Message "Encrypting download channel" -Seconds 2
     
@@ -505,8 +505,8 @@ function Start-Installation {
     
     # STEP 5: INSTALL SOFTWARE
     Write-Host "`n   ⚙️  STEP 3: INSTALLATION" -ForegroundColor Yellow
-    Write-Host "   " + ("─" * 50) -ForegroundColor DarkGray
-    
+    Write-Host "   " + ("-" * 50) -ForegroundColor DarkGray
+
     $installResult = Install-Software -InstallerPath $tempFile
     
     if (-not $installResult.Success) {
@@ -520,8 +520,8 @@ function Start-Installation {
     
     # STEP 6: ACTIVATE LICENSE
     Write-Host "`n   🔑 STEP 4: LICENSE ACTIVATION" -ForegroundColor Yellow
-    Write-Host "   " + ("─" * 50) -ForegroundColor DarkGray
-    
+    Write-Host "   " + ("-" * 50) -ForegroundColor DarkGray
+
     $activationResult = Activate-License -LicenseKey $licenseKey
     
     if ($activationResult.Success) {
@@ -533,8 +533,8 @@ function Start-Installation {
     
     # STEP 7: CLEANUP
     Write-Host "`n   🧹 STEP 5: CLEANUP" -ForegroundColor Yellow
-    Write-Host "   " + ("─" * 50) -ForegroundColor DarkGray
-    
+    Write-Host "   " + ("-" * 50) -ForegroundColor DarkGray
+
     $cleanupFiles = @($tempFile)
     $cleanupResult = Cleanup-Installation -FilesToRemove $cleanupFiles
     
