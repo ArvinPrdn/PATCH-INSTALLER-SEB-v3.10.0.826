@@ -1,5 +1,3 @@
-[file name]: installer-secure.ps1
-[file content begin]
 # ==================================================
 # SEB SECURE INSTALLER v3.10.0.826
 # GitHub URL Protected Version
