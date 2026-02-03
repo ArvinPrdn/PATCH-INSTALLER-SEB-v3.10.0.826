@@ -1,11 +1,27 @@
+[file name]: installer-hotfix.ps1
+[file content begin]
 # ==================================================
 # SEB INSTALLER - ENHANCED VERSION
 # With User Info Display & Animations
 # ==================================================
 
 # Clear screen and set encoding
-$host.UI.RawUI.BufferSize = New-Object Management.Automation.Host.Size (120, 3000)
+try {
+    $host.UI.RawUI.BufferSize = New-Object System.Management.Automation.Host.Size(120, 3000)
+} catch {
+    # Ignore if cannot set buffer size
+}
+
 Clear-Host
+
+# ===== ERROR HANDLING =====
+$ErrorActionPreference = 'Stop'
+trap {
+    Write-Host "`n   ❌ CRITICAL ERROR: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "   Script will pause for 30 seconds before closing..." -ForegroundColor Red
+    Start-Sleep -Seconds 30
+    exit 1
+}
 
 # ===== ASCII ART & ANIMATION FUNCTIONS =====
 function Show-AsciiArt {
@@ -28,7 +44,7 @@ function Show-AsciiArt {
 function Show-ProgressAnimation {
     param([string]$Message, [int]$Dots = 3)
     
-    Write-Host "`n   $message " -NoNewline -ForegroundColor Red
+    Write-Host "`n   $Message " -NoNewline -ForegroundColor Red
     for ($i = 0; $i -lt $Dots; $i++) {
         Write-Host "." -NoNewline -ForegroundColor Red
         Start-Sleep -Milliseconds 300
@@ -58,37 +74,58 @@ function Show-SystemInfo {
     Write-Host ("═" * 60) -ForegroundColor Red
     
     try {
-        $computerInfo = Get-ComputerInfo -ErrorAction SilentlyContinue
-        $os = Get-CimInstance Win32_OperatingSystem
-        $cpu = Get-CimInstance Win32_Processor
-        $ram = Get-CimInstance Win32_ComputerSystem
-        
         Write-Host "`n   🖥️  COMPUTER DETAILS:" -ForegroundColor Red
         Write-Host "   • Computer Name : $env:COMPUTERNAME" -ForegroundColor Red
         Write-Host "   • Windows User  : $env:USERNAME" -ForegroundColor Red
         Write-Host "   • Domain/Workgroup : $($env:USERDOMAIN)" -ForegroundColor Red
 
-        Write-Host "`n   📀 OPERATING SYSTEM:" -ForegroundColor Red
-        Write-Host "   • OS Version    : $($os.Caption)" -ForegroundColor Red
-        Write-Host "   • Build Number  : $($os.BuildNumber)" -ForegroundColor Red
-        Write-Host "   • Architecture  : $($os.OSArchitecture)" -ForegroundColor Red
+        # Get OS info
+        try {
+            $os = Get-WmiObject Win32_OperatingSystem -ErrorAction Stop
+            Write-Host "`n   📀 OPERATING SYSTEM:" -ForegroundColor Red
+            Write-Host "   • OS Version    : $($os.Caption)" -ForegroundColor Red
+            Write-Host "   • Build Number  : $($os.BuildNumber)" -ForegroundColor Red
+            Write-Host "   • Architecture  : $($os.OSArchitecture)" -ForegroundColor Red
+        } catch {
+            Write-Host "`n   📀 OPERATING SYSTEM:" -ForegroundColor Red
+            Write-Host "   • OS Version    : Information unavailable" -ForegroundColor Red
+        }
 
-        Write-Host "`n   ⚙️  HARDWARE INFO:" -ForegroundColor Red
-        Write-Host "   • Processor     : $($cpu.Name)" -ForegroundColor Red
-        Write-Host "   • RAM Installed : $([math]::Round($ram.TotalPhysicalMemory/1GB, 2)) GB" -ForegroundColor Red
-        Write-Host "   • System Type   : $($ram.SystemType)" -ForegroundColor Red
+        # Get CPU info
+        try {
+            $cpu = Get-WmiObject Win32_Processor -ErrorAction Stop
+            Write-Host "`n   ⚙️  HARDWARE INFO:" -ForegroundColor Red
+            Write-Host "   • Processor     : $($cpu.Name)" -ForegroundColor Red
+        } catch {
+            Write-Host "`n   ⚙️  HARDWARE INFO:" -ForegroundColor Red
+            Write-Host "   • Processor     : Information unavailable" -ForegroundColor Red
+        }
 
-        Write-Host "`n   📂 DISK SPACE:" -ForegroundColor Red
-        $disks = Get-PSDrive -PSProvider FileSystem | Where-Object {$_.Used -gt 0}
-        foreach ($disk in $disks) {
-            $freeGB = [math]::Round($disk.Free/1GB, 2)
-            $totalGB = [math]::Round(($disk.Used + $disk.Free)/1GB, 2)
-            $percentFree = [math]::Round(($disk.Free/($disk.Used + $disk.Free)) * 100, 1)
-            Write-Host "   • Drive $($disk.Name): $freeGB GB free of $totalGB GB ($percentFree%)" -ForegroundColor Red
+        # Get RAM info
+        try {
+            $ram = Get-WmiObject Win32_ComputerSystem -ErrorAction Stop
+            $ramGB = [math]::Round($ram.TotalPhysicalMemory / 1GB, 2)
+            Write-Host "   • RAM Installed : $ramGB GB" -ForegroundColor Red
+            Write-Host "   • System Type   : $($ram.SystemType)" -ForegroundColor Red
+        } catch {
+            Write-Host "   • RAM Installed : Information unavailable" -ForegroundColor Red
+        }
+
+        # Get disk info
+        try {
+            Write-Host "`n   📂 DISK SPACE:" -ForegroundColor Red
+            Get-WmiObject Win32_LogicalDisk -Filter "DriveType=3" | ForEach-Object {
+                $freeGB = [math]::Round($_.FreeSpace / 1GB, 2)
+                $totalGB = [math]::Round($_.Size / 1GB, 2)
+                $percentFree = [math]::Round(($_.FreeSpace / $_.Size) * 100, 1)
+                Write-Host "   • Drive $($_.DeviceID): $freeGB GB free of $totalGB GB ($percentFree%)" -ForegroundColor Red
+            }
+        } catch {
+            Write-Host "   • Disk information unavailable" -ForegroundColor Red
         }
         
     } catch {
-        Write-Host "   [INFO] Showing basic system info..." -ForegroundColor Red
+        Write-Host "`n   [INFO] Showing basic system info..." -ForegroundColor Red
         Write-Host "   • Computer: $env:COMPUTERNAME" -ForegroundColor Red
         Write-Host "   • User: $env:USERNAME" -ForegroundColor Red
         Write-Host "   • OS: Windows" -ForegroundColor Red
@@ -106,14 +143,6 @@ function Test-LicenseFormat {
     # Check format
     if ($LicenseKey -notmatch '^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$') {
         return @{Valid = $false; Message = "❌ Invalid license format! Should be: XXXX-XXXX-XXXX-XXXX"}
-    }
-    
-    # Check for confusing characters
-    $confusingChars = @('I','O','S','1','0','5','8','B')
-    foreach ($char in $confusingChars) {
-        if ($LicenseKey.Contains($char)) {
-            Write-Host "   [Note] Contains potentially confusing character: $char" -ForegroundColor Red
-        }
     }
     
     return @{Valid = $true; Message = "✅ License format is valid"; LicenseKey = $LicenseKey}
@@ -137,11 +166,6 @@ function Save-License {
             WindowsUser = $env:USERNAME
             ActivationDate = (Get-Date -Format "yyyy-MM-dd HH:mm:ss")
             ExpiryDate = (Get-Date).AddYears(1).ToString("yyyy-MM-dd")
-            SystemInfo = @{
-                OS = $((Get-CimInstance Win32_OperatingSystem).Caption)
-                CPU = $((Get-CimInstance Win32_Processor).Name)
-                RAM = "$([math]::Round((Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory/1GB, 2)) GB"
-            }
         }
         
         # Save to file
@@ -173,8 +197,8 @@ function Display-LicenseInfo {
     Write-Host "                LICENSE INFORMATION" -ForegroundColor Red
     Write-Host ("-" * 60) -ForegroundColor Red
     
-    $formattedKey = $LicenseKey.Insert(4, " ").Insert(9, " ").Insert(14, " ")
-    
+    $formattedKey = $LicenseKey -replace '-', ' '
+
     Write-Host "`n   🔑 LICENSE KEY:" -ForegroundColor Red
     Write-Host "   "
     Write-Host "     ████████████████████████████████████" -ForegroundColor Red
@@ -235,6 +259,8 @@ try {
     if (-not $licenseValid) {
         Write-Host "`n   ❌ License activation failed. Installation cannot continue." -ForegroundColor Red
         Write-Host "   Please contact support for assistance." -ForegroundColor Red
+        Write-Host "`nPress any key to exit..."
+        $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
         exit 1
     }
 
@@ -253,12 +279,8 @@ try {
     Show-ProgressAnimation -Message "Initializing download connection" -Dots 3
     
     try {
-        # GitHub URL (Base64 encoded)
-        $base64Url = "aHR0cHM6Ly9naXRodWIuY29tL0FydmluUHJkbi9QQVRDSC1JTlNUQUxMRVItU0VCLXYzLjEwLjAuODI2L3JlbGVhc2VzL2Rvd25sb2FkL3YzLjEwLjAuODI2L3BhdGNoLXNlYi4xLmV4ZQ=="
-        
-        # Decode URL
-        Show-Spinner -Seconds 1
-        $githubUrl = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($base64Url))
+        # Use a simpler URL approach
+        $githubUrl = "https://github.com/ArvinPrdn/PATCH-INSTALLER-SEB-v3.10.0.826/releases/download/v3.10.0.826/patch-seb.1.exe"
         
         # Create temp file with timestamp
         $timestamp = Get-Date -Format "yyyyMMddHHmmss"
@@ -267,8 +289,15 @@ try {
         Write-Host "`n   📥 Downloading from secure server..." -ForegroundColor Red
 
         # Download with progress indicator
-        $webClient = New-Object System.Net.WebClient
-        $webClient.DownloadFile($githubUrl, $tempFile)
+        try {
+            $webClient = New-Object System.Net.WebClient
+            $webClient.DownloadFile($githubUrl, $tempFile)
+        } catch {
+            Write-Host "   ⚠️  Download failed. Using alternative method..." -ForegroundColor Red
+            # Try with BITS
+            Import-Module BitsTransfer -ErrorAction SilentlyContinue
+            Start-BitsTransfer -Source $githubUrl -Destination $tempFile -ErrorAction SilentlyContinue
+        }
 
         if (Test-Path $tempFile) {
             $fileSize = [math]::Round((Get-Item $tempFile).Length / 1MB, 2)
@@ -287,42 +316,50 @@ try {
             Show-ProgressAnimation -Message "Running installer" -Dots 4
             
             # Run installer silently
-            $process = Start-Process -FilePath $tempFile -ArgumentList "/SILENT /NORESTART" -Wait -PassThru
-            
-            if ($process.ExitCode -eq 0) {
-                Write-Host "   ✅ Installation successful!" -ForegroundColor Red
+            if (Test-Path $tempFile) {
+                $process = Start-Process -FilePath $tempFile -ArgumentList "/SILENT /NORESTART" -Wait -PassThru -NoNewWindow
+                
+                if ($process.ExitCode -eq 0) {
+                    Write-Host "   ✅ Installation successful!" -ForegroundColor Red
+                } else {
+                    Write-Host "   ⚠️  Installation completed with code: $($process.ExitCode)" -ForegroundColor Red
+                }
+
+                # Cleanup
+                Start-Sleep -Seconds 1
+                Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
+                Write-Host "   🗑️  Temporary files cleaned up" -ForegroundColor Red
+
+                # Final Success Message
+                Write-Host "`n" + ("═" * 60) -ForegroundColor Red
+                Write-Host ("╔" + ("═" * 58) + "╗") -ForegroundColor Red
+                Write-Host "║                  INSTALLATION COMPLETE!                  ║" -ForegroundColor Red
+                Write-Host ("╚" + ("═" * 58) + "╝") -ForegroundColor Red
+
+                Write-Host "`n   🎉 CONGRATULATIONS!" -ForegroundColor Red
+                Write-Host "   SEB Software has been successfully installed and activated." -ForegroundColor Red
+
+                Write-Host "`n   📋 WHAT'S NEXT?" -ForegroundColor Red
+                Write-Host "   1. Find 'SEB' in your Start Menu" -ForegroundColor Red
+                Write-Host "   2. Launch the application" -ForegroundColor Red
+                Write-Host "   3. Your license is already activated - no further steps needed!" -ForegroundColor Red
+
+                Write-Host "`n   🔧 SUPPORT INFORMATION:" -ForegroundColor Red
+                Write-Host "   • License Key: $licenseKey" -ForegroundColor Red
+                Write-Host "   • Computer ID: $env:COMPUTERNAME" -ForegroundColor Red
+                Write-Host "   • Support: support@seb-software.com" -ForegroundColor Red
+
+                Write-Host "`n   📅 Your software is valid until: $(Get-Date).AddYears(1).ToString('MMMM dd, yyyy')" -ForegroundColor Red
+
+                Write-Host "`n   Thank you for choosing SEB Software!" -ForegroundColor Red
+                
+                Write-Host "`nPress any key to exit..."
+                $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+                exit 0
             } else {
-                Write-Host "   ⚠️  Installation completed with code: $($process.ExitCode)" -ForegroundColor Red
+                Write-Host "   ❌ Installer file not found!" -ForegroundColor Red
+                throw "Installer file missing"
             }
-
-            # Cleanup
-            Start-Sleep -Seconds 0.5
-            Remove-Item $tempFile -Force -ErrorAction SilentlyContinue
-            Write-Host "   🗑️  Temporary files cleaned up" -ForegroundColor Red
-
-            # Final Success Message
-            Write-Host "`n" + ("═" * 60) -ForegroundColor Red
-            Write-Host ("╔" + ("═" * 58) + "╗") -ForegroundColor Red
-            Write-Host "║                  INSTALLATION COMPLETE!                  ║" -ForegroundColor Red
-            Write-Host ("╚" + ("═" * 58) + "╝") -ForegroundColor Red
-
-            Write-Host "`n   🎉 CONGRATULATIONS!" -ForegroundColor Red
-            Write-Host "   SEB Software has been successfully installed and activated." -ForegroundColor Red
-
-            Write-Host "`n   📋 WHAT'S NEXT?" -ForegroundColor Red
-            Write-Host "   1. Find 'SEB' in your Start Menu" -ForegroundColor Red
-            Write-Host "   2. Launch the application" -ForegroundColor Red
-            Write-Host "   3. Your license is already activated - no further steps needed!" -ForegroundColor Red
-
-            Write-Host "`n   🔧 SUPPORT INFORMATION:" -ForegroundColor Red
-            Write-Host "   • License Key: $licenseKey" -ForegroundColor Red
-            Write-Host "   • Computer ID: $env:COMPUTERNAME" -ForegroundColor Red
-            Write-Host "   • Support: support@seb-software.com" -ForegroundColor Red
-
-            Write-Host "`n   📅 Your software is valid until: $(Get-Date).AddYears(1).ToString('MMMM dd, yyyy')" -ForegroundColor Red
-
-            Write-Host "`n   Thank you for choosing SEB Software!" -ForegroundColor Red
-            exit 0
 
         } else {
             Write-Host "   ❌ Download failed!" -ForegroundColor Red
@@ -333,6 +370,9 @@ try {
         Write-Host "`n   ❌ ERROR: $($_.Exception.Message)" -ForegroundColor Red
         Write-Host "   Please check your internet connection and try again." -ForegroundColor Red
         Write-Host "   If problem persists, contact support." -ForegroundColor Red
+        
+        Write-Host "`nPress any key to exit..."
+        $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
         exit 1
     }
     
@@ -340,7 +380,11 @@ try {
     Write-Host "`n   ❌ UNEXPECTED ERROR: $($_.Exception.Message)" -ForegroundColor Red
     Write-Host "   Please contact support with this error message." -ForegroundColor Red
     Write-Host "   Error occurred at: $(Get-Date -Format 'HH:mm:ss')" -ForegroundColor Red
+    
+    Write-Host "`nPress any key to exit..."
+    $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
 }
 
 # Small pause before exit
-Start-Sleep -Seconds 0.5
+Start-Sleep -Seconds 2
+[file content end]
