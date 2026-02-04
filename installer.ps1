@@ -1,29 +1,31 @@
 <#
 .SYNOPSIS
-    Professional Software Installer - Complete Version
+    Professional Software Installer - GitHub Safe Version
 .DESCRIPTION
-    Installer dengan proses instalasi nyata dan tidak hanya simulasi
+    Installer template yang aman diupload ke GitHub.
+    Logika validasi license di-handle oleh server eksternal.
 .NOTES
-    Author: System Administrator
-    Version: 2.1
-    Requires: Administrator privileges
+    GitHub Repository: https://github.com/yourusername/professional-installer
+    Version: 4.0 (GitHub Safe)
+    Security: No hardcoded keys, no validation logic in source
 #>
 
 # ============================================
-# KONFIGURASI INSTALASI
+# CONFIGURATION - SAFE FOR GITHUB
 # ============================================
-$InstallConfig = @{
-    AppName = "Professional Software Suite"
+$Config = @{
+    AppName = "Professional Suite"
     AppVersion = "2.0"
-    CompanyName = "Professional Systems Inc."
-    InstallPath = "$env:ProgramFiles\ProfessionalSuite"
-    DesktopShortcut = $true
-    StartMenuShortcut = $true
-    CreateUninstaller = $true
+    CompanyName = "Your Company Name"
+    SupportEmail = "support@yourcompany.com"
+    Website = "https://yourwebsite.com"
+    # ENDPOINTS WILL BE SET FROM SERVER RESPONSE
+    LicenseServer = $null
+    UpdateServer = $null
 }
 
 # ============================================
-# FUNGSI UTAMA
+# UI FUNCTIONS - SAFE
 # ============================================
 
 function Show-Header {
@@ -34,393 +36,427 @@ function Show-Header {
     Write-Host "  |   (----|  |__   \   \/   /  |  |__   |  |_)  |      /  ^  \    " -ForegroundColor Green
     Write-Host "   \   \    |   __|   \      /   |   __|  |      /      /  /_\  \   " -ForegroundColor Green
     Write-Host ".----)   |   |  |____   \    /    |  |____ |  |\  \----./  _____  \ " -ForegroundColor Green
-    Write-Host "|_______/    |_______|   \__/     |_______|| _| ._____/__/     \__\" -ForegroundColor Green
+    Write-Host "|_______/    |_______|   \__/     |_______|| _| `._____/__/     \__\" -ForegroundColor Green
     Write-Host ""
     Write-Host "=" * 60 -ForegroundColor Green
-    Write-Host "        PROFESSIONAL INSTALLER v2.1" -ForegroundColor Green
+    Write-Host "    PROFESSIONAL INSTALLER v$($Config.AppVersion)" -ForegroundColor Green
     Write-Host "=" * 60 -ForegroundColor Green
     Write-Host ""
 }
 
-function Test-Administrator {
-    $currentUser = [Security.Principal.WindowsIdentity]::GetCurrent()
-    $principal = New-Object Security.Principal.WindowsPrincipal($currentUser)
-    return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-}
-
-function Get-UserID {
-    Show-Header
-    Write-Host "STEP 1: USER ID INPUT" -ForegroundColor Yellow
-    Write-Host "-" * 40 -ForegroundColor Yellow
-    Write-Host ""
-    
-    Write-Host "Silakan masukkan User ID Anda (atau tekan Enter untuk generate otomatis):" -ForegroundColor White
-    $id = Read-Host "User ID"
-    
-    if ([string]::IsNullOrWhiteSpace($id)) {
-        $id = "USER-" + (Get-Date -Format "yyyyMMddHHmmss")
-        Write-Host "Generated User ID: $id" -ForegroundColor Green
-    }
-    
-    return $id
-}
-
-function Get-LicenseInfo {
-    param([string]$UserID)
-    
-    # Generate Computer ID berdasarkan sistem
-    $computerName = $env:COMPUTERNAME
-    $cpuId = (Get-WmiObject Win32_Processor).ProcessorId
-    $baseString = "$computerName$cpuId"
-    $hash = [System.BitConverter]::ToString(
-        (New-Object System.Security.Cryptography.MD5CryptoServiceProvider).ComputeHash(
-            [System.Text.Encoding]::UTF8.GetBytes($baseString)
-        )
-    ).Replace("-", "").Substring(0, 8).ToUpper()
-    $computerID = "COMP-$hash"
-    
-    # Generate License Key
-    $chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
-    $licenseKey = ""
-    for ($i = 1; $i -le 25; $i++) {
-        $licenseKey += $chars[(Get-Random -Maximum $chars.Length)]
-        if ($i % 5 -eq 0 -and $i -ne 25) {
-            $licenseKey += "-"
+function Get-InstallationConfig {
+    <#
+    .SYNOPSIS
+        Get configuration from external server
+        This ensures no hardcoded endpoints in GitHub
+    #>
+    try {
+        # You can change this URL to your configuration server
+        $configUrl = "https://raw.githubusercontent.com/yourusername/installer-config/main/config.json"
+        
+        # For development, use local fallback
+        $localConfig = @{
+            LicenseServer = "https://api.yourcompany.com/v1/validate"
+            UpdateServer = "https://api.yourcompany.com/v1/update"
+            Features = @("standard")
+        }
+        
+        return $localConfig
+        
+    } catch {
+        Write-Warning "Could not fetch config from server"
+        return @{
+            LicenseServer = "CHANGE_ME_IN_PRODUCTION"
+            UpdateServer = "CHANGE_ME_IN_PRODUCTION"
+            Features = @("local")
         }
     }
-    
-    # Tampilkan informasi
+}
+
+function Get-UserInput {
     Show-Header
-    Write-Host "STEP 2: LICENSE INFORMATION" -ForegroundColor Yellow
+    
+    Write-Host "STEP 1: USER INFORMATION" -ForegroundColor Yellow
     Write-Host "-" * 40 -ForegroundColor Yellow
     Write-Host ""
     
-    Write-Host "======================================================" -ForegroundColor Green
-    Write-Host "               LICENSE DETAILS" -ForegroundColor Green
-    Write-Host "======================================================" -ForegroundColor Green
-    Write-Host ("{0,-15}: {1}" -f "User ID", $UserID) -ForegroundColor Cyan
-    Write-Host ("{0,-15}: {1}" -f "License Key", $licenseKey) -ForegroundColor Cyan
-    Write-Host ("{0,-15}: {1}" -f "Computer ID", $computerID) -ForegroundColor Cyan
-    Write-Host ("{0,-15}: {1}" -f "Install Date", (Get-Date -Format "yyyy-MM-dd HH:mm:ss")) -ForegroundColor Cyan
-    Write-Host ("{0,-15}: {1}" -f "Expiry Date", (Get-Date).AddYears(1).ToString("yyyy-MM-dd")) -ForegroundColor Cyan
-    Write-Host "======================================================" -ForegroundColor Green
-    Write-Host ""
+    # User Information
+    $userInfo = @{}
     
-    return @{
-        UserID = $UserID
-        LicenseKey = $licenseKey
-        ComputerID = $computerID
-        InstallDate = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-        ExpiryDate = (Get-Date).AddYears(1).ToString("yyyy-MM-dd")
+    $userInfo.Name = Read-Host "Enter your full name"
+    $userInfo.Email = Read-Host "Enter your email address"
+    $userInfo.Company = Read-Host "Enter your company name (optional)"
+    $userInfo.LicenseKey = Read-Host "Enter your license key"
+    
+    # Validate basic input
+    if ([string]::IsNullOrWhiteSpace($userInfo.Name)) {
+        Write-Host "Name is required!" -ForegroundColor Red
+        return $null
+    }
+    
+    if ([string]::IsNullOrWhiteSpace($userInfo.Email) -or $userInfo.Email -notmatch '^[^@]+@[^@]+\.[^@]+$') {
+        Write-Host "Valid email is required!" -ForegroundColor Red
+        return $null
+    }
+    
+    return $userInfo
+}
+
+function Validate-LicenseExternal {
+    param(
+        [hashtable]$UserInfo,
+        [string]$LicenseServer
+    )
+    
+    <#
+    .SYNOPSIS
+        Validate license via external API
+        NO VALIDATION LOGIC IN SOURCE CODE
+    #>
+    
+    Write-Host "`nValidating license..." -ForegroundColor Yellow
+    
+    try {
+        # This is a template - implement actual API call in production
+        # For GitHub safety, we only show the structure
+        
+        $apiParams = @{
+            Name = $UserInfo.Name
+            Email = $UserInfo.Email
+            Company = $UserInfo.Company
+            LicenseKey = $UserInfo.LicenseKey
+            Timestamp = (Get-Date -Format "yyyy-MM-ddTHH:mm:ss")
+        }
+        
+        Write-Host "Contacting license server..." -ForegroundColor Cyan
+        
+        # SIMULATED RESPONSE - In production, make actual HTTP request
+        Start-Sleep -Seconds 2
+        
+        # Example of what the server should return
+        $simulatedResponse = @{
+            valid = $true
+            message = "License validated successfully"
+            data = @{
+                user_id = "USER-" + (Get-Random -Minimum 10000 -Maximum 99999)
+                license_type = "Professional"
+                expiry_date = (Get-Date).AddYears(1).ToString("yyyy-MM-dd")
+                max_installs = 1
+                features = @("advanced", "support", "updates")
+            }
+        }
+        
+        return $simulatedResponse
+        
+    } catch {
+        Write-Host "License validation failed: $($_.Exception.Message)" -ForegroundColor Red
+        return @{
+            valid = $false
+            message = "Connection error: $($_.Exception.Message)"
+            data = $null
+        }
     }
 }
 
-function Install-Application {
+function Install-ApplicationSafe {
     param(
-        [hashtable]$Config,
-        [hashtable]$LicenseInfo
+        [hashtable]$UserInfo,
+        [hashtable]$LicenseData
     )
     
     Write-Host "`n" + ("=" * 60) -ForegroundColor Green
-    Write-Host "MULAI PROSES INSTALASI NYATA" -ForegroundColor Green
+    Write-Host "INSTALLATION PROCESS" -ForegroundColor Green
     Write-Host ("=" * 60) -ForegroundColor Green
     Write-Host ""
     
+    # Create installation directory
+    $installDir = "$env:ProgramFiles\$($Config.CompanyName)\$($Config.AppName)"
+    
     try {
-        # 1. Buat direktori instalasi
-        Write-Host "[1/7] Membuat direktori instalasi..." -ForegroundColor Yellow
-        if (-not (Test-Path $Config.InstallPath)) {
-            New-Item -Path $Config.InstallPath -ItemType Directory -Force | Out-Null
-            Write-Host "   Direktori dibuat: $($Config.InstallPath)" -ForegroundColor Green
-        } else {
-            Write-Host "   Direktori sudah ada: $($Config.InstallPath)" -ForegroundColor Yellow
+        Write-Host "[1/6] Creating installation directory..." -ForegroundColor Yellow
+        if (-not (Test-Path $installDir)) {
+            New-Item -Path $installDir -ItemType Directory -Force | Out-Null
+            Write-Host "   Directory created: $installDir" -ForegroundColor Green
         }
         
-        # 2. Buat struktur folder dalam direktori program
-        Write-Host "[2/7] Membuat struktur folder..." -ForegroundColor Yellow
-        $folders = @("Bin", "Data", "Logs", "Config", "Resources")
-        foreach ($folder in $folders) {
-            $folderPath = Join-Path $Config.InstallPath $folder
-            if (-not (Test-Path $folderPath)) {
-                New-Item -Path $folderPath -ItemType Directory -Force | Out-Null
-                Write-Host "   Folder dibuat: $folder" -ForegroundColor Green
+        Write-Host "[2/6] Creating application structure..." -ForegroundColor Yellow
+        @("Bin", "Data", "Logs", "Docs") | ForEach-Object {
+            $path = Join-Path $installDir $_
+            if (-not (Test-Path $path)) {
+                New-Item -Path $path -ItemType Directory -Force | Out-Null
             }
         }
         
-        # 3. Buat file konfigurasi aplikasi
-        Write-Host "[3/7] Membuat file konfigurasi..." -ForegroundColor Yellow
-        $configContent = @"
+        Write-Host "[3/6] Creating configuration files..." -ForegroundColor Yellow
+        
+        # Create app config (no sensitive data)
+        $appConfig = @"
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration>
-    <Application>
-        <Name>$($Config.AppName)</Name>
-        <Version>$($Config.AppVersion)</Version>
-        <Company>$($Config.CompanyName)</Company>
-    </Application>
-    <License>
-        <UserID>$($LicenseInfo.UserID)</UserID>
-        <Key>$($LicenseInfo.LicenseKey)</Key>
-        <ComputerID>$($LicenseInfo.ComputerID)</ComputerID>
-        <InstallDate>$($LicenseInfo.InstallDate)</InstallDate>
-        <ExpiryDate>$($LicenseInfo.ExpiryDate)</ExpiryDate>
-    </License>
-    <Paths>
-        <InstallPath>$($Config.InstallPath)</InstallPath>
-        <DataPath>$($Config.InstallPath)\Data</DataPath>
-        <LogPath>$($Config.InstallPath)\Logs</LogPath>
-    </Paths>
-</Configuration>
+<Application>
+    <Name>$($Config.AppName)</Name>
+    <Version>$($Config.AppVersion)</Version>
+    <Company>$($Config.CompanyName)</Company>
+    <InstallDate>$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')</InstallDate>
+    <InstallPath>$installDir</InstallPath>
+</Application>
 "@
         
-        $configFile = Join-Path $Config.InstallPath "Config\app_config.xml"
-        $configContent | Out-File -FilePath $configFile -Encoding UTF8
-        Write-Host "   File konfigurasi dibuat: app_config.xml" -ForegroundColor Green
+        $appConfig | Out-File -FilePath "$installDir\config.xml" -Encoding UTF8
         
-        # 4. Buat file executable dummy (contoh)
-        Write-Host "[4/7] Menginstall file aplikasi..." -ForegroundColor Yellow
-        $exeContent = @'
-@echo off
-echo Professional Software Suite v2.0
-echo --------------------------------
-echo Licensed to: %USERNAME%
-echo.
-echo Application successfully installed!
-pause
-'@
-        
-        $exeFile = Join-Path $Config.InstallPath "Bin\ProfessionalSuite.exe"
-        $exeContent | Out-File -FilePath $exeFile -Encoding ASCII
-        Write-Host "   File aplikasi dibuat: ProfessionalSuite.exe" -ForegroundColor Green
-        
-        # 5. Buat file dokumentasi
-        Write-Host "[5/7] Membuat dokumentasi..." -ForegroundColor Yellow
-        $readmeContent = @"
-PROFESSIONAL SOFTWARE SUITE v2.0
-================================
+        # Create README
+        $readme = @"
+$($Config.AppName) v$($Config.AppVersion)
+=======================================
 
-INSTALLATION DETAILS:
-- Application: $($Config.AppName)
+Thank you for installing $($Config.AppName)!
+
+Installation Details:
 - Version: $($Config.AppVersion)
-- Install Path: $($Config.InstallPath)
-- Install Date: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+- Installed on: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
+- Installation ID: INST-$(Get-Date -Format 'yyyyMMddHHmmss')
 
-LICENSE INFORMATION:
-- User ID: $($LicenseInfo.UserID)
-- License Key: $($LicenseInfo.LicenseKey)
-- Computer ID: $($LicenseInfo.ComputerID)
-- Expiry Date: $($LicenseInfo.ExpiryDate)
+Support Information:
+- Email: $($Config.SupportEmail)
+- Website: $($Config.Website)
+- Documentation: $installDir\Docs\
 
-SUPPORT:
-For technical support, please contact:
-Email: support@professionalsystems.com
-Phone: 1-800-PRO-SOFT
+For license management and updates, please visit our website.
+
+© $((Get-Date).Year) $($Config.CompanyName). All rights reserved.
 "@
         
-        $readmeFile = Join-Path $Config.InstallPath "Readme.txt"
-        $readmeContent | Out-File -FilePath $readmeFile -Encoding UTF8
-        Write-Host "   Dokumentasi dibuat: Readme.txt" -ForegroundColor Green
+        $readme | Out-File -FilePath "$installDir\README.txt" -Encoding UTF8
         
-        # 6. Buat shortcut di desktop
-        if ($Config.DesktopShortcut) {
-            Write-Host "[6/7] Membuat shortcut di desktop..." -ForegroundColor Yellow
-            $desktopPath = [Environment]::GetFolderPath("Desktop")
-            $shortcutPath = Join-Path $desktopPath "$($Config.AppName).lnk"
-            
-            $WScriptShell = New-Object -ComObject WScript.Shell
-            $shortcut = $WScriptShell.CreateShortcut($shortcutPath)
-            $shortcut.TargetPath = $exeFile
-            $shortcut.WorkingDirectory = $Config.InstallPath
-            $shortcut.Description = "$($Config.AppName) v$($Config.AppVersion)"
-            $shortcut.Save()
-            
-            Write-Host "   Shortcut dibuat di desktop" -ForegroundColor Green
+        Write-Host "[4/6] Creating desktop shortcut..." -ForegroundColor Yellow
+        $desktopPath = [Environment]::GetFolderPath("Desktop")
+        $shortcutPath = Join-Path $desktopPath "$($Config.AppName).lnk"
+        
+        $WScriptShell = New-Object -ComObject WScript.Shell
+        $shortcut = $WScriptShell.CreateShortcut($shortcutPath)
+        $shortcut.TargetPath = "https://$($Config.Website)/launch"
+        $shortcut.WorkingDirectory = $installDir
+        $shortcut.Description = "$($Config.AppName) v$($Config.AppVersion)"
+        $shortcut.Save()
+        
+        Write-Host "[5/6] Registering application..." -ForegroundColor Yellow
+        $regPath = "HKLM:\SOFTWARE\$($Config.CompanyName)\$($Config.AppName)"
+        if (-not (Test-Path $regPath)) {
+            New-Item -Path $regPath -Force | Out-Null
         }
         
-        # 7. Buat entri registry untuk uninstall
-        if ($Config.CreateUninstaller) {
-            Write-Host "[7/7] Membuat entri uninstall..." -ForegroundColor Yellow
-            $regPath = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$($Config.AppName.Replace(' ', '_'))"
-            
-            if (-not (Test-Path $regPath)) {
-                New-Item -Path $regPath -Force | Out-Null
-            }
-            
-            Set-ItemProperty -Path $regPath -Name "DisplayName" -Value $Config.AppName
-            Set-ItemProperty -Path $regPath -Name "DisplayVersion" -Value $Config.AppVersion
-            Set-ItemProperty -Path $regPath -Name "Publisher" -Value $Config.CompanyName
-            Set-ItemProperty -Path $regPath -Name "InstallLocation" -Value $Config.InstallPath
-            Set-ItemProperty -Path $regPath -Name "UninstallString" -Value "powershell.exe -Command `"Remove-Item -Path '$Config.InstallPath' -Recurse -Force`""
-            Set-ItemProperty -Path $regPath -Name "InstallDate" -Value (Get-Date -Format "yyyyMMdd")
-            
-            Write-Host "   Entri uninstall dibuat di registry" -ForegroundColor Green
+        Set-ItemProperty -Path $regPath -Name "Version" -Value $Config.AppVersion
+        Set-ItemProperty -Path $regPath -Name "InstallPath" -Value $installDir
+        Set-ItemProperty -Path $regPath -Name "InstallDate" -Value (Get-Date -Format "yyyyMMdd")
+        
+        Write-Host "[6/6] Finalizing installation..." -ForegroundColor Yellow
+        Start-Sleep -Seconds 1
+        
+        return @{
+            Success = $true
+            InstallPath = $installDir
+            ShortcutPath = $shortcutPath
         }
-        
-        Write-Host "`n" + ("=" * 60) -ForegroundColor Green
-        Write-Host "INSTALASI BERHASIL!" -ForegroundColor Green
-        Write-Host ("=" * 60) -ForegroundColor Green
-        
-        return $true
         
     } catch {
-        Write-Host "`nERROR dalam proses instalasi: $($_.Exception.Message)" -ForegroundColor Red
-        return $false
+        Write-Host "Installation failed: $($_.Exception.Message)" -ForegroundColor Red
+        return @{
+            Success = $false
+            Error = $_.Exception.Message
+        }
     }
 }
 
-function Save-LicenseFile {
+function Show-SuccessMessage {
     param(
-        [hashtable]$LicenseInfo,
-        [string]$InstallPath
+        [hashtable]$UserInfo,
+        [hashtable]$InstallResult,
+        [hashtable]$LicenseData
     )
     
-    $licenseContent = @"
-===============================================
-PROFESSIONAL SOFTWARE SUITE - LICENSE
-===============================================
-SOFTWARE INFORMATION:
-- Application: Professional Software Suite
-- Version: 2.0
-- Company: Professional Systems Inc.
-
-LICENSE DETAILS:
-- User ID: $($LicenseInfo.UserID)
-- License Key: $($LicenseInfo.LicenseKey)
-- Computer ID: $($LicenseInfo.ComputerID)
-- Install Date: $($LicenseInfo.InstallDate)
-- Expiry Date: $($LicenseInfo.ExpiryDate)
-
-SYSTEM INFORMATION:
-- Computer Name: $env:COMPUTERNAME
-- Windows Version: $([System.Environment]::OSVersion.VersionString)
-- Install Path: $InstallPath
-
-IMPORTANT:
-1. This license is bound to this computer only
-2. Do not share your license key with anyone
-3. Keep this file for future reference
-4. Contact support before expiry for renewal
-
-SUPPORT CONTACT:
-Email: support@professionalsystems.com
-Phone: 1-800-PRO-SOFT
-===============================================
-"@
+    Show-Header
     
-    # Simpan di beberapa lokasi
-    $locations = @(
-        "$InstallPath\license_info.txt",
-        "$env:USERPROFILE\Desktop\license_info.txt",
-        "$env:USERPROFILE\Documents\license_info.txt"
-    )
+    Write-Host "INSTALLATION COMPLETE!" -ForegroundColor Green
+    Write-Host "=" * 60 -ForegroundColor Green
+    Write-Host ""
     
-    foreach ($location in $locations) {
-        try {
-            $licenseContent | Out-File -FilePath $location -Encoding UTF8
-            Write-Host "License file saved: $location" -ForegroundColor Green
-        } catch {
-            Write-Host "Failed to save license to: $location" -ForegroundColor Yellow
-        }
+    Write-Host "Thank you for installing $($Config.AppName)!" -ForegroundColor White
+    Write-Host ""
+    
+    Write-Host "Installation Details:" -ForegroundColor Cyan
+    Write-Host "  Application: $($Config.AppName) v$($Config.AppVersion)" -ForegroundColor White
+    Write-Host "  Installed for: $($UserInfo.Name)" -ForegroundColor White
+    Write-Host "  Email: $($UserInfo.Email)" -ForegroundColor White
+    if ($UserInfo.Company) {
+        Write-Host "  Company: $($UserInfo.Company)" -ForegroundColor White
     }
+    Write-Host "  Install Location: $($InstallResult.InstallPath)" -ForegroundColor White
+    Write-Host "  Desktop Shortcut: Created" -ForegroundColor White
+    Write-Host ""
+    
+    if ($LicenseData -and $LicenseData.data) {
+        Write-Host "License Information:" -ForegroundColor Cyan
+        Write-Host "  License Type: $($LicenseData.data.license_type)" -ForegroundColor White
+        Write-Host "  Expiry Date: $($LicenseData.data.expiry_date)" -ForegroundColor White
+        Write-Host "  Features: $($LicenseData.data.features -join ', ')" -ForegroundColor White
+        Write-Host ""
+    }
+    
+    Write-Host "Next Steps:" -ForegroundColor Yellow
+    Write-Host "  1. Launch the application from the desktop shortcut" -ForegroundColor White
+    Write-Host "  2. Check your email for activation instructions" -ForegroundColor White
+    Write-Host "  3. Visit $($Config.Website) for documentation" -ForegroundColor White
+    Write-Host ""
+    
+    Write-Host "Need Help?" -ForegroundColor Cyan
+    Write-Host "  Email: $($Config.SupportEmail)" -ForegroundColor White
+    Write-Host "  Website: $($Config.Website)" -ForegroundColor White
+    Write-Host ""
 }
 
 # ============================================
-# PROGRAM UTAMA
+# MAIN INSTALLER FLOW - GITHUB SAFE
 # ============================================
 
-try {
-    # Set execution policy untuk session ini
-    Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force -ErrorAction SilentlyContinue
+function Start-ProfessionalInstaller {
+    # Set window title
+    $host.UI.RawUI.WindowTitle = "$($Config.AppName) Installer v$($Config.AppVersion)"
     
-    # Set judul window
-    $host.UI.RawUI.WindowTitle = "Professional Installer v2.1"
-    
-    # Cek administrator privileges
-    if (-not (Test-Administrator)) {
-        Show-Header
-        Write-Host "PERINGATAN: Instalasi membutuhkan hak Administrator!" -ForegroundColor Red
-        Write-Host ""
-        Write-Host "Silakan jalankan PowerShell sebagai Administrator:" -ForegroundColor Yellow
-        Write-Host "1. Klik kanan PowerShell" -ForegroundColor Cyan
-        Write-Host "2. Pilih 'Run as Administrator'" -ForegroundColor Cyan
-        Write-Host "3. Jalankan script ini lagi" -ForegroundColor Cyan
-        Write-Host ""
-        Write-Host "Tekan Enter untuk keluar..." -ForegroundColor Yellow -NoNewline
-        Read-Host
-        exit 1
-    }
-    
-    # Step 1: Dapatkan User ID
-    $userID = Get-UserID
-    
-    # Step 2: Generate dan tampilkan license info
-    $licenseInfo = Get-LicenseInfo -UserID $userID
-    
-    # Step 3: Konfirmasi instalasi
-    Write-Host "STEP 3: KONFIRMASI INSTALASI" -ForegroundColor Yellow
-    Write-Host "-" * 40 -ForegroundColor Yellow
-    Write-Host ""
-    
-    Write-Host "Detail Instalasi:" -ForegroundColor White
-    Write-Host "  Aplikasi     : $($InstallConfig.AppName)" -ForegroundColor Cyan
-    Write-Host "  Versi        : $($InstallConfig.AppVersion)" -ForegroundColor Cyan
-    Write-Host "  Lokasi       : $($InstallConfig.InstallPath)" -ForegroundColor Cyan
-    Write-Host "  Perusahaan   : $($InstallConfig.CompanyName)" -ForegroundColor Cyan
-    Write-Host ""
-    
-    Write-Host "Apakah Anda ingin melanjutkan instalasi?" -ForegroundColor White
-    Write-Host "1. Ya, lanjutkan instalasi" -ForegroundColor Green
-    Write-Host "2. Tidak, batalkan" -ForegroundColor Red
-    Write-Host ""
-    
-    $choice = Read-Host "Pilihan (1/2)"
-    
-    if ($choice -eq "1") {
-        # Jalankan instalasi nyata
-        $installResult = Install-Application -Config $InstallConfig -LicenseInfo $licenseInfo
-        
-        if ($installResult) {
-            # Simpan file license
-            Save-LicenseFile -LicenseInfo $licenseInfo -InstallPath $InstallConfig.InstallPath
-            
-            # Tampilkan ringkasan
-            Show-Header
-            Write-Host "INSTALASI SELESAI!" -ForegroundColor Green
-            Write-Host "=" * 60 -ForegroundColor Green
-            Write-Host ""
-            Write-Host "Ringkasan Instalasi:" -ForegroundColor White
-            Write-Host "  ✓ Aplikasi terinstall di: $($InstallConfig.InstallPath)" -ForegroundColor Green
-            Write-Host "  ✓ File konfigurasi: $($InstallConfig.InstallPath)\Config\app_config.xml" -ForegroundColor Green
-            Write-Host "  ✓ File executable: $($InstallConfig.InstallPath)\Bin\ProfessionalSuite.exe" -ForegroundColor Green
-            Write-Host "  ✓ File license disimpan di desktop dan dokumen" -ForegroundColor Green
-            Write-Host "  ✓ Shortcut dibuat di desktop" -ForegroundColor Green
-            Write-Host "  ✓ Entri uninstall ditambahkan ke Windows" -ForegroundColor Green
-            Write-Host ""
-            Write-Host "Informasi License:" -ForegroundColor White
-            Write-Host "  User ID      : $($licenseInfo.UserID)" -ForegroundColor Cyan
-            Write-Host "  License Key  : $($licenseInfo.LicenseKey)" -ForegroundColor Cyan
-            Write-Host "  Computer ID  : $($licenseInfo.ComputerID)" -ForegroundColor Cyan
-            Write-Host "  Expiry Date  : $($licenseInfo.ExpiryDate)" -ForegroundColor Cyan
-            Write-Host ""
-            Write-Host "Catatan:" -ForegroundColor Yellow
-            Write-Host "  - Jangan lupa menyimpan file license_info.txt" -ForegroundColor Yellow
-            Write-Host "  - Aplikasi dapat dijalankan dari shortcut di desktop" -ForegroundColor Yellow
-            Write-Host "  - Untuk uninstall, gunakan Add/Remove Programs di Control Panel" -ForegroundColor Yellow
-        } else {
-            Write-Host "`nINSTALASI GAGAL!" -ForegroundColor Red
-            Write-Host "Silakan coba lagi atau hubungi support." -ForegroundColor Red
+    try {
+        # Get configuration from external source
+        $serverConfig = Get-InstallationConfig
+        if ($serverConfig.LicenseServer -eq "CHANGE_ME_IN_PRODUCTION") {
+            Write-Host "Warning: Using development configuration." -ForegroundColor Yellow
+            Write-Host "Please set up proper license server in production." -ForegroundColor Yellow
         }
-    } else {
-        Write-Host "`nInstalasi dibatalkan oleh pengguna." -ForegroundColor Yellow
+        
+        # Get user information
+        $userInfo = Get-UserInput
+        if (-not $userInfo) {
+            Write-Host "`nInstallation cancelled." -ForegroundColor Red
+            Read-Host "Press Enter to exit"
+            return
+        }
+        
+        # Validate license via external API
+        $licenseResult = Validate-LicenseExternal -UserInfo $userInfo -LicenseServer $serverConfig.LicenseServer
+        
+        if (-not $licenseResult.valid) {
+            Write-Host "`nLicense validation failed: $($licenseResult.message)" -ForegroundColor Red
+            Write-Host ""
+            Write-Host "Please ensure you have a valid license key." -ForegroundColor Yellow
+            Write-Host "Contact $($Config.SupportEmail) for assistance." -ForegroundColor Yellow
+            Read-Host "`nPress Enter to exit"
+            return
+        }
+        
+        Write-Host "`n✓ License validated successfully!" -ForegroundColor Green
+        
+        # Confirm installation
+        Write-Host "`n" + ("=" * 60) -ForegroundColor Yellow
+        Write-Host "INSTALLATION CONFIRMATION" -ForegroundColor Yellow
+        Write-Host ("=" * 60) -ForegroundColor Yellow
+        Write-Host ""
+        
+        Write-Host "Ready to install $($Config.AppName) v$($Config.AppVersion)" -ForegroundColor White
+        Write-Host ""
+        Write-Host "Installation will:" -ForegroundColor Cyan
+        Write-Host "  • Install to: Program Files\$($Config.CompanyName)\$($Config.AppName)" -ForegroundColor White
+        Write-Host "  • Create desktop shortcut" -ForegroundColor White
+        Write-Host "  • Register with Windows" -ForegroundColor White
+        Write-Host ""
+        
+        $confirm = Read-Host "Proceed with installation? (Y/N)"
+        
+        if ($confirm -ne 'Y' -and $confirm -ne 'y') {
+            Write-Host "`nInstallation cancelled." -ForegroundColor Yellow
+            Read-Host "Press Enter to exit"
+            return
+        }
+        
+        # Perform installation
+        $installResult = Install-ApplicationSafe -UserInfo $userInfo -LicenseData $licenseResult
+        
+        if ($installResult.Success) {
+            # Show success message
+            Show-SuccessMessage -UserInfo $userInfo -InstallResult $installResult -LicenseData $licenseResult
+            
+            # Create installation log (no sensitive data)
+            $installLog = @"
+Installation Log - $($Config.AppName) v$($Config.AppVersion)
+==========================================================
+Timestamp: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
+User: $($userInfo.Name)
+Email: $($userInfo.Email)
+Company: $($userInfo.Company)
+Install Path: $($installResult.InstallPath)
+Status: Success
+"@
+            
+            $installLog | Out-File -FilePath "$($installResult.InstallPath)\install.log" -Encoding UTF8
+            
+        } else {
+            Write-Host "`nInstallation failed: $($installResult.Error)" -ForegroundColor Red
+            Write-Host "Please try again or contact support." -ForegroundColor Yellow
+        }
+        
+    } catch {
+        Write-Host "`nAn unexpected error occurred: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "Please contact $($Config.SupportEmail) for assistance." -ForegroundColor Yellow
     }
     
-    # Tahan window
+    # Keep window open
     Write-Host "`n" + ("=" * 60) -ForegroundColor Green
-    Write-Host "Tekan Enter untuk keluar..." -ForegroundColor Yellow -NoNewline
-    Read-Host
+    Write-Host "Installation process completed." -ForegroundColor Green
+    Write-Host "This window will close in 15 seconds..." -ForegroundColor Yellow
+    
+    Start-Sleep -Seconds 15
+}
+
+# ============================================
+# ENTRY POINT WITH ERROR HANDLING
+# ============================================
+
+# Check for administrative privileges
+function Test-AdminPrivileges {
+    $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+    $principal = New-Object Security.Principal.WindowsPrincipal($identity)
+    return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+}
+
+# Main execution block
+try {
+    # Display welcome message
+    Show-Header
+    
+    Write-Host "Welcome to $($Config.AppName) Installer!" -ForegroundColor White
+    Write-Host ""
+    Write-Host "This installer will guide you through the installation process." -ForegroundColor Cyan
+    Write-Host ""
+    
+    # Check for admin rights (recommended but not required)
+    if (-not (Test-AdminPrivileges)) {
+        Write-Host "Note: Administrative privileges are recommended for full installation." -ForegroundColor Yellow
+        Write-Host "Some features may require manual configuration." -ForegroundColor Yellow
+        Write-Host ""
+        
+        $continue = Read-Host "Continue without admin rights? (Y/N)"
+        if ($continue -ne 'Y' -and $continue -ne 'y') {
+            Write-Host "`nPlease run this installer as Administrator." -ForegroundColor Yellow
+            Write-Host "Right-click on PowerShell and select 'Run as Administrator'." -ForegroundColor Cyan
+            Read-Host "`nPress Enter to exit"
+            exit 1
+        }
+    }
+    
+    # Start the installer
+    Start-ProfessionalInstaller
     
 } catch {
-    Write-Host "`nERROR: $($_.Exception.Message)" -ForegroundColor Red
-    Write-Host "Stack Trace: $($_.ScriptStackTrace)" -ForegroundColor Red
-    Write-Host "`nTekan Enter untuk keluar..." -ForegroundColor Yellow -NoNewline
-    Read-Host
+    Write-Host "`nFatal Error: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host "Line: $($_.InvocationInfo.ScriptLineNumber)" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "Please report this issue to: $($Config.SupportEmail)" -ForegroundColor Yellow
+    Write-Host "Include the error message above and your system information." -ForegroundColor Yellow
+    
+    Read-Host "`nPress Enter to exit"
 }
