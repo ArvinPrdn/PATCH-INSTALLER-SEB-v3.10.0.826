@@ -1,0 +1,1 @@
+LicenseKey,CustomerName,ComputerName,GeneratedDate,ExpiryDate,Status
