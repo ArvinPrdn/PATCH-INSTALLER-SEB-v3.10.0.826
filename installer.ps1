@@ -1,16 +1,16 @@
-# Professional Software Installer - Fixed Version
-# Script ini aman dijalankan dan tidak akan langsung tertutup
+<#
+.SYNOPSIS
+    Professional Software Installer - Simple Version
+.DESCRIPTION
+    Installer dengan tampilan yang sederhana dan tidak error
+.NOTES
+    Author: System Administrator
+    Version: 2.0
+#>
 
-# Atur untuk tetap membuka console setelah selesai
-$ErrorActionPreference = "Stop"
-try {
-    # Clear console
+# Function untuk menampilkan header
+function Show-Header {
     Clear-Host
-    
-    # Setup console
-    $host.UI.RawUI.WindowTitle = "Professional Installer v2.0"
-    
-    # Tampilkan ASCII Art
     Write-Host ""
     Write-Host "    _______. ___________    ____  _______ .______          ___      " -ForegroundColor Green
     Write-Host "   /       ||   ____\   \  /   / |   ____||   _  \        /   \     " -ForegroundColor Green
@@ -19,118 +19,142 @@ try {
     Write-Host ".----)   |   |  |____   \    /    |  |____ |  |\  \----./  _____  \ " -ForegroundColor Green
     Write-Host "|_______/    |_______|   \__/     |_______|| _| `._____/__/     \__\" -ForegroundColor Green
     Write-Host ""
-    Write-Host "=" * 65 -ForegroundColor Green
-    Write-Host "      PROFESSIONAL INSTALLATION SYSTEM v2.0" -ForegroundColor Green
-    Write-Host "=" * 65 -ForegroundColor Green
+    Write-Host "*" * 60 -ForegroundColor Green
+    Write-Host "        PROFESSIONAL INSTALLER v2.0" -ForegroundColor Green
+    Write-Host "*" * 60 -ForegroundColor Green
     Write-Host ""
-    
-    # Step 1: Input User ID
-    Write-Host "STEP 1: INPUT USER ID" -ForegroundColor Yellow
+}
+
+# Function untuk input User ID
+function Get-UserID {
+    Show-Header
+    Write-Host "STEP 1: USER ID INPUT" -ForegroundColor Yellow
     Write-Host "-" * 40 -ForegroundColor Yellow
     Write-Host ""
     
-    $userID = Read-Host "Masukkan User ID Anda"
+    $id = Read-Host "Silakan masukkan User ID Anda"
     
-    # Validasi input
-    while ([string]::IsNullOrWhiteSpace($userID)) {
-        Write-Host "Error: User ID tidak boleh kosong!" -ForegroundColor Red
-        $userID = Read-Host "Masukkan User ID Anda"
+    # Jika kosong, beri default
+    if ([string]::IsNullOrWhiteSpace($id)) {
+        Write-Host "Menggunakan ID default..." -ForegroundColor Yellow
+        $id = "USER-" + (Get-Date -Format "yyyyMMdd")
     }
     
-    # Step 2: Generate informasi
-    Clear-Host
+    return $id
+}
+
+# Function untuk generate license
+function Get-LicenseInfo {
+    param([string]$UserID)
     
-    # Tampilkan ASCII lagi
-    Write-Host ""
-    Write-Host "    _______. ___________    ____  _______ .______          ___      " -ForegroundColor Green
-    Write-Host "   /       ||   ____\   \  /   / |   ____||   _  \        /   \     " -ForegroundColor Green
-    Write-Host "  |   (----`|  |__   \   \/   /  |  |__   |  |_)  |      /  ^  \    " -ForegroundColor Green
-    Write-Host "   \   \    |   __|   \      /   |   __|  |      /      /  /_\  \   " -ForegroundColor Green
-    Write-Host ".----)   |   |  |____   \    /    |  |____ |  |\  \----./  _____  \ " -ForegroundColor Green
-    Write-Host "|_______/    |_______|   \__/     |_______|| _| `._____/__/     \__\" -ForegroundColor Green
-    Write-Host ""
-    
+    Show-Header
     Write-Host "STEP 2: LICENSE INFORMATION" -ForegroundColor Yellow
     Write-Host "-" * 40 -ForegroundColor Yellow
     Write-Host ""
     
-    # Generate License Key sederhana
-    function Generate-License {
-        $chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
-        $license = ""
-        for ($i = 1; $i -le 20; $i++) {
-            $license += $chars[(Get-Random -Minimum 0 -Maximum $chars.Length)]
-            if ($i % 4 -eq 0 -and $i -ne 20) {
-                $license += "-"
+    # Generate sederhana
+    $random = Get-Random -Minimum 100000 -Maximum 999999
+    $computerID = "COMP-" + $random.ToString()
+    
+    # License Key format: XXXX-XXXX-XXXX-XXXX
+    $key = ""
+    for ($i = 0; $i -lt 16; $i++) {
+        $key += (48..57 + 65..70 | Get-Random | % {[char]$_})
+        if (($i + 1) % 4 -eq 0 -and $i -lt 15) {
+            $key += "-"
+        }
+    }
+    
+    # Tampilkan informasi
+    Write-Host "┌──────────────────────────────────────────────────────┐" -ForegroundColor Green
+    Write-Host "│               LICENSE DETAILS                        │" -ForegroundColor Green
+    Write-Host "├──────────────────────────────────────────────────────┤" -ForegroundColor Green
+    Write-Host ("│ {0,-12}: {1,-35} │" -f "User ID", $UserID) -ForegroundColor Green
+    Write-Host ("│ {0,-12}: {1,-35} │" -f "License", $key) -ForegroundColor Green
+    Write-Host ("│ {0,-12}: {1,-35} │" -f "Computer ID", $computerID) -ForegroundColor Green
+    Write-Host ("│ {0,-12}: {1,-35} │" -f "Date", (Get-Date -Format "yyyy-MM-dd")) -ForegroundColor Green
+    Write-Host "└──────────────────────────────────────────────────────┘" -ForegroundColor Green
+    Write-Host ""
+    
+    return @{
+        UserID = $UserID
+        LicenseKey = $key
+        ComputerID = $computerID
+        Date = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    }
+}
+
+# Function utama
+function Start-Installer {
+    try {
+        # Dapatkan User ID
+        $userID = Get-UserID
+        
+        # Tampilkan license info
+        $licenseInfo = Get-LicenseInfo -UserID $userID
+        
+        # Konfirmasi instalasi
+        Write-Host "STEP 3: CONFIRMATION" -ForegroundColor Yellow
+        Write-Host "-" * 40 -ForegroundColor Yellow
+        Write-Host ""
+        
+        Write-Host "Apakah Anda ingin melanjutkan instalasi?" -ForegroundColor White
+        Write-Host "1. Ya, lanjutkan instalasi" -ForegroundColor Cyan
+        Write-Host "2. Tidak, batalkan" -ForegroundColor Cyan
+        Write-Host ""
+        
+        $choice = Read-Host "Pilihan (1/2)"
+        
+        if ($choice -eq "1") {
+            # Proses instalasi
+            Write-Host "`nMemulai instalasi..." -ForegroundColor Green
+            
+            # Progress sederhana
+            $steps = @("Initializing...", "Copying files...", "Registering components...", "Finalizing...")
+            $i = 1
+            foreach ($step in $steps) {
+                Write-Host "  [$i/4] $step" -ForegroundColor Yellow
+                Start-Sleep -Seconds 1
+                $i++
+            }
+            
+            Write-Host "`nInstalasi selesai!" -ForegroundColor Green
+            
+            # Simpan ke file
+            $infoText = @"
+=======================================
+SOFTWARE LICENSE INFORMATION
+=======================================
+User ID      : $($licenseInfo.UserID)
+License Key  : $($licenseInfo.LicenseKey)
+Computer ID  : $($licenseInfo.ComputerID)
+Install Date : $($licenseInfo.Date)
+=======================================
+"@
+            
+            $infoText | Out-File -FilePath "C:\temp\license_info.txt" -Force -ErrorAction SilentlyContinue
+            if (Test-Path "C:\temp\license_info.txt") {
+                Write-Host "License disimpan di: C:\temp\license_info.txt" -ForegroundColor Cyan
+            } else {
+                $infoText | Out-File -FilePath ".\license_info.txt" -Force
+                Write-Host "License disimpan di: license_info.txt" -ForegroundColor Cyan
             }
         }
-        return $license
-    }
-    
-    # Generate Computer ID sederhana
-    $computerID = "PC-" + (Get-Random -Minimum 100000 -Maximum 999999).ToString()
-    $licenseKey = Generate-License
-    $installDate = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $expiryDate = (Get-Date).AddYears(1).ToString("yyyy-MM-dd")
-    
-    # Tampilkan informasi dalam tabel
-    Write-Host "╔══════════════════════════════════════════════════════╗" -ForegroundColor Green
-    Write-Host "║                 LICENSE INFORMATION                  ║" -ForegroundColor Green
-    Write-Host "╠══════════════════════════════════════════════════════╣" -ForegroundColor Green
-    Write-Host ("║ {0,-15}: {1,-32} ║" -f "User ID", $userID) -ForegroundColor Green
-    Write-Host "╠══════════════════════════════════════════════════════╣" -ForegroundColor Green
-    Write-Host ("║ {0,-15}: {1,-32} ║" -f "License Key", $licenseKey) -ForegroundColor Green
-    Write-Host ("║ {0,-15}: {1,-32} ║" -f "Computer ID", $computerID) -ForegroundColor Green
-    Write-Host ("║ {0,-15}: {1,-32} ║" -f "Install Date", $installDate) -ForegroundColor Green
-    Write-Host ("║ {0,-15}: {1,-32} ║" -f "Expiry Date", $expiryDate) -ForegroundColor Green
-    Write-Host "╚══════════════════════════════════════════════════════╝" -ForegroundColor Green
-    Write-Host ""
-    
-    # Step 3: Konfirmasi instalasi
-    Write-Host "STEP 3: INSTALLATION CONFIRMATION" -ForegroundColor Yellow
-    Write-Host "-" * 40 -ForegroundColor Yellow
-    Write-Host ""
-    
-    $confirm = Read-Host "Apakah Anda ingin melanjutkan instalasi? (Y/N)"
-    
-    if ($confirm -eq 'Y' -or $confirm -eq 'y') {
-        Write-Host "`nMemulai instalasi..." -ForegroundColor Green
-        
-        # Simulasi progress bar
-        for ($i = 0; $i -le 100; $i += 10) {
-            Write-Progress -Activity "Installing Software" -Status "$i% Complete" -PercentComplete $i
-            Start-Sleep -Milliseconds 300
+        else {
+            Write-Host "`nInstalasi dibatalkan." -ForegroundColor Red
         }
         
-        Write-Host "`nInstalasi berhasil!" -ForegroundColor Green
-        
-        # Simpan informasi ke file
-        $licenseInfo = @"
-===========================================
-PROFESSIONAL SOFTWARE LICENSE
-===========================================
-User ID: $userID
-License Key: $licenseKey
-Computer ID: $computerID
-Installation Date: $installDate
-Expiry Date: $expiryDate
-===========================================
-"@
-        
-        $licenseInfo | Out-File -FilePath "license.txt" -Encoding UTF8
-        Write-Host "`nInformasi license disimpan di: license.txt" -ForegroundColor Cyan
+        # Tahan window
+        Write-Host "`n" + ("=" * 60) -ForegroundColor Green
+        Write-Host "Tekan ENTER untuk keluar..." -ForegroundColor Yellow -NoNewline
+        Read-Host
     }
-    else {
-        Write-Host "`nInstalasi dibatalkan." -ForegroundColor Red
+    catch {
+        Write-Host "`nError: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "Tekan ENTER untuk keluar..." -ForegroundColor Yellow -NoNewline
+        Read-Host
     }
-    
-    # Tahan console agar tidak langsung tertutup
-    Write-Host "`n" + ("=" * 65) -ForegroundColor Green
-    Write-Host "Tekan sembarang tombol untuk keluar..." -ForegroundColor Yellow
-    $null = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
 }
-catch {
-    Write-Host "`nTerjadi error: $($_.Exception.Message)" -ForegroundColor Red
-    Write-Host "Tekan sembarang tombol untuk keluar..." -ForegroundColor Yellow
-    $null = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
-}
+
+# Jalankan installer
+Start-Installer
