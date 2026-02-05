@@ -14,12 +14,13 @@ Clear-Host
 
 # ===== ASCII ART LOGO =====
 $AsciiLogo = @"
-            _         _    _    ______     _____ _   _               _       
-  _ __ ___ | |__   __| |  / \  |  _ \ \   / /_ _| \ | |_ __  _ __ __| |_ __  
- | '_ ` _ \| '_ \ / _` | / _ \ | |_) \ \ / / | ||  \| | '_ \| '__/ _` | '_ \ 
- | | | | | | | | | (_| |/ ___ \|  _ < \ V /  | || |\  | |_) | | | (_| | | | |
- |_| |_| |_|_| |_|\__,_/_/   \_\_| \_\ \_/  |___|_| \_| .__/|_|  \__,_|_| |_|
-                                                      |_|                     
+     _______. ___________    ____  _______ .______          ___      
+    /       ||   ____\   \  /   / |   ____||   _  \        /   \     
+   |   (----`|  |__   \   \/   /  |  |__   |  |_)  |      /  ^  \    
+    \   \    |   __|   \      /   |   __|  |      /      /  /_\  \   
+.----)   |   |  |____   \    /    |  |____ |  |\  \----./  _____  \  
+|_______/    |_______|   \__/     |_______|| _| `._____/__/     \__\ 
+                                                                     
 "@
 
 # ===== DISPLAY ASCII LOGO =====
@@ -29,7 +30,7 @@ Write-Host $AsciiLogo -ForegroundColor Magenta
 Write-Host "`n" + ("=" * 70) -ForegroundColor Cyan
 Write-Host "          PATCH INSTALLER SEB v3.10.0.826" -ForegroundColor Cyan
 Write-Host "              Safe • Silent • Stable" -ForegroundColor Cyan
-Write-Host "              Powered by ArvinPrdn" -ForegroundColor Cyan
+Write-Host "              Powered by Fajar Putra" -ForegroundColor Cyan
 Write-Host ("=" * 70) -ForegroundColor Cyan
 Write-Host "`n"
 
@@ -296,3 +297,4 @@ if ($Host.Name -like "*ISE*") {
 }
 
 exit 0
+
